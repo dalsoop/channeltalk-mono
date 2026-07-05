@@ -30,6 +30,12 @@
       "metric": "글자수 제약이 있을 때 공백 포함 wc -m 실측값이 상한 이내인지(제약 없으면 자동 통과). 초과 문자 수",
       "direction": "minimize",
       "gate": "==0"
+    },
+    {
+      "name": "tone_natural",
+      "metric": "말투(AI 티) — ai-tell-taxonomy.md 기준. S1(결정적) 위반 수(의문문 소제목·대시 수사 제목·과장 오프너·시각장식 남용·균일 리듬) + 자연스러움 tone_score 0~10",
+      "direction": "minimize+maximize",
+      "gate": "s1_count==0 && tone_score>=8.0"
     }
   ],
   "checkers": [
@@ -44,6 +50,10 @@
     {
       "name": "docs-structure-count-reviewer",
       "lens": "절차 뼈대·글자수 렌즈 — 4요소(작동순서→지식근거→판단·채점기준→막힐 때)가 순서대로 뼈대를 이루는지, 글자수 제약이 있으면 공백 포함 wc -m 로 실측해 상한 준수 및 초과 시 4요소 유지 여부를 채점한다."
+    },
+    {
+      "name": "docs-tone-reviewer",
+      "lens": "말투(AI 티) 렌즈 — 문서가 사람이 쓴 글로 읽히는지 ai-tell-taxonomy.md(10대 카테고리 A~J) 기준으로 본다. 줄표(—) 수사·의문문 소제목·과장 오프너·시각장식 남용·균일 리듬을 적발. S1 결정적 위반 0 + tone_score>=8.0 이어야 통과."
     }
   ],
   "domain_ssot": "각 대상 저장소/앱의 실제 코드·디렉터리 구조·해당 AGENTS.md·현재 대화맥락이 유일한 근거 정본. 별도 외부 정본 없음(없는 정보는 근거 없음으로 취급, 지어내기 금지).",
