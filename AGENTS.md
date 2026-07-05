@@ -15,7 +15,7 @@ skills = 53~79%. 원리: **retrieval-led > pre-training-led**. 세부는 아래 
 한 고객사의 기존 채널톡 연동(baseline) 대비 **새로 생긴 Open API 기능**을 **PII 안전하게**
 매뉴얼로 뽑는 **maker→checker 에이전트 루프**. 설계 정본 = `CHANNELTALK.md`.
 
-- 구조: 일반 git 저장소(다른 `*-mono`의 bare+worktree 아님). 작업 파일은 `main/apps/<app>/`.
+- 구조: **bare + git worktree**(다른 `*-mono` 와 동일 — 과거 "일반 저장소(bare+worktree 아님)" 서술은 오류). 본판 worktree 가 `<repo>/main/` 에 체크아웃돼 있어 에이전트 CWD(저장소 부모)에선 작업 파일과 아래 인덱스가 `main/apps/<app>/` 기준이다. 단 저장소 트리 루트 자체는 그 `main/` worktree 내용이라 **트리엔 `main/` 이 없다** — GitHub 에서 읽는 `README.md` 는 그래서 `apps/...` 기준으로 링크한다.
 - 로그훅: repo 루트에서 세션을 켜야 `.claude/settings.json`·`tools/save_log.py`·`logs/`가 맞물린다
   (해커톤 제출 로그는 **무편집**).
 
