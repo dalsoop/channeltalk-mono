@@ -35,7 +35,7 @@
           "dir": { "type": "string", "enum": ["R", "W", "CB"] },
           "has_pii": { "type": "boolean" },
           "pii_fields": { "type": "array", "items": { "type": "string" } },
-          "provenance": { "type": "string", "enum": ["mock", "inferred"] },
+          "provenance": { "type": "string", "enum": ["pinned", "inferred"] },
           "added_in_version": { "type": "integer", "minimum": 1 },
           "policy_flag": { "type": ["string", "null"], "enum": ["hold_pii_transmit", "mask_inbound", null] }
         }
@@ -63,7 +63,8 @@
         "diff_completeness": { "type": "boolean" },
         "no_fabricated_endpoint": { "type": "boolean" },
         "no_secret_in_example": { "type": "boolean" },
-        "every_pii_flagged": { "type": "boolean" }
+        "every_pii_flagged": { "type": "boolean" },
+        "surface_in_pinned_spec": { "type": "boolean" }
       }
     },
     "gate_offenders": {

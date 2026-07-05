@@ -8,6 +8,7 @@ import {
   noFabricatedEndpoint,
   noSecretInExample,
   everyPiiFlagged,
+  surfaceInPinnedSpec,
 } from "./gates.mjs";
 
 // 신규 feature 를 §4.4 new_features 항목 형태로 투영한다.
@@ -26,7 +27,14 @@ function projectNewFeature(f, pii_policy) {
   };
 }
 
-export function computeChanges(surface, baseline, profile) {
+// specOps(선택): Set<"METHOD /norm/path"> — pin 된 실 OpenAPI 스펙의 operation 집합.
+// 호출자(diff_surface.mjs)가 loadSpecOps 로 미리 뽑아 넘긴다. computeChanges 는 순수 유지
+// (파일·네트워크 I/O 안 함) — specOps 는 인자로만 받는다.
+//   주어지면  → 5번째 게이트 surface_in_pinned_spec 을 계산(표면·신규의 비-inferred(pinned)
+//               feature 가 실 스펙에 실재하는지 대조, offenders → gate_offenders).
+//   미제공 시 → 하위호환: 이 게이트를 아예 생략한다(gates 에 키를 넣지 않음). 스펙 pin 을
+//               못 읽은 실행(스펙 파일 부재 등)에서 "true" 로 위장하지 않기 위해 생략을 택한다.
+export function computeChanges(surface, baseline, profile, specOps = null) {
   const features = surface.features;
   const surfaceIds = features.map((f) => f.id);
   const integrated = Array.isArray(baseline.integrated) ? baseline.integrated : [];
@@ -71,6 +79,16 @@ export function computeChanges(surface, baseline, profile) {
   if (!g2.ok) gate_offenders.no_fabricated_endpoint = g2.offenders;
   if (!g3.ok) gate_offenders.no_secret_in_example = g3.offenders;
   if (!g4.ok) gate_offenders.every_pii_flagged = g4.offenders;
+
+  // 게이트 5 (선택): surface_in_pinned_spec — specOps 가 주어질 때만 계산.
+  // 표면 전체의 비-inferred(pinned) feature 가 pin 된 실 스펙 operation 에 실재하는지 대조한다.
+  // 신규(new)도 표면의 부분집합이므로 표면 전체를 검사하면 신규까지 함께 덮인다.
+  // specOps 미제공(하위호환) 시에는 키 자체를 넣지 않는다(위 함수 주석 참조).
+  if (specOps) {
+    const g5 = surfaceInPinnedSpec(features, specOps);
+    gates.surface_in_pinned_spec = g5.ok;
+    if (!g5.ok) gate_offenders.surface_in_pinned_spec = g5.offenders;
+  }
 
   return {
     customer: profile.customer ?? baseline.customer,

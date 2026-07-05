@@ -8,8 +8,20 @@
   "properties": {
     "source": { "type": "string", "description": "선언 SSOT (예: https://api-doc.channel.io/)" },
     "base_url": { "type": "string", "description": "REST base_url (예: https://api.channel.io/open/v5)" },
-    "provenance_default": { "type": "string", "enum": ["mock", "inferred"], "description": "verified-live 금지" },
-    "surface_version": { "type": "integer", "minimum": 1, "description": "신기능 추가마다 +1" },
+    "provenance_default": { "type": "string", "enum": ["pinned", "inferred"], "description": "pinned=공개 스펙 스냅샷(해시 고정) 일치. verified-live 금지" },
+    "surface_version": { "type": "integer", "minimum": 1, "description": "신 pin 반영마다 +1" },
+    "note": { "type": "string", "description": "표면 재생성 근거(예: pinned from swagger.json@<sha7>)" },
+    "spec_lock": {
+      "type": "object",
+      "description": "pin 된 실 스펙 참조(ssot/provenance-lock.json 발췌). pinned feature 의 대조 근거.",
+      "required": ["sha256", "spec_version", "op_count"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": { "type": "string", "description": "ssot/channel-swagger.json 의 sha256" },
+        "spec_version": { "type": "string" },
+        "op_count": { "type": "integer", "minimum": 1 }
+      }
+    },
     "features": {
       "type": "array",
       "minItems": 1,
@@ -24,7 +36,7 @@
       "properties": {
         "id": { "type": "string", "description": "안정적 식별자(불변). baseline/changes 가 이걸로 추적", "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$" },
         "category": { "type": "string", "enum": ["User", "UserChat", "Message", "Manager", "Group", "Bot", "Channel", "Webhook", "Event"] },
-        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE"] },
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
         "path": { "type": "string" },
         "event": { "type": "string", "description": "webhook 이벤트명(CB 전용)" },
         "auth": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
@@ -47,7 +59,7 @@
         "example_request": { "type": "string" },
         "example_response": { "type": "object" },
         "value": { "type": "string" },
-        "provenance": { "type": "string", "enum": ["mock", "inferred"], "description": "verified-live 금지" },
+        "provenance": { "type": "string", "enum": ["pinned", "inferred"], "description": "pinned=공개 스펙 스냅샷(해시 고정) 실재. inferred=스펙 밖(webhook 등). verified-live 금지" },
         "added_in_version": { "type": "integer", "minimum": 1 }
       }
     }
