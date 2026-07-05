@@ -71,7 +71,7 @@ ${JSON.stringify(blockers || [])}
 
 const inspectorPrompt = (pkg, round) =>
 `너는 에이전트 공장의 검사관(checker)다. 받은 패키지를 신선하게 6축 채점만(후하게 금지). 정본 references/agent-factory-philosophy.md.
-각 0~10: S 구조(frontmatter·레이아웃·SKILL 섹션), R 역할(maker 한 역할·입출력·maker≠checker 분리), V 검증설계(실측 게이트·스키마·keep-best·ledger·종료조건 — 핵심, 없으면 7미만), P 프롬프트(슬림·결정적·지어내기 금지 명시), G 정직(신선 checker·실측·큰재작성 감점), U 실행성(스키마 파싱·워크플로 문법·이름 해소·플레이스홀더 없음).
+각 0~10: S 구조(frontmatter·레이아웃·SKILL 섹션·**최종 사용처 레이아웃 미러**/원본 파편화 금지 F-8), R 역할(maker 한 역할·입출력·maker≠checker 분리), V 검증설계(실측 게이트·스키마·keep-best·ledger·종료조건 — 핵심, 없으면 7미만), P 프롬프트(슬림·결정적·지어내기 금지 명시), G 정직(신선 checker·실측·큰재작성 감점), U 실행성(스키마 파싱·워크플로 문법·이름 해소·플레이스홀더 없음).
 agent_score=(S+R+V×2+P+G+U)/7. >=${GATE} 이고 V>=7 이면 "ship", 아니면 "revise". 막는 결함마다 {file,problem,fix,tell(F-#)}.
 [package · round ${round}]
 ${JSON.stringify(pkg.files.map(f => ({ path: f.path, content: f.content })))}
