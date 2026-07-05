@@ -16,8 +16,12 @@
 ## 사용법 (진입점)
 
 ```
+# (A) Claude 런타임
 Workflow({ scriptPath: ".claude/skills/channeltalk-plugin-judge/workflow/judge-panel.mjs" })
 → { verdicts:[5인], synthesis }   # 디스크 쓰기·리포트는 호출자
+# (B) Codex CLI 런타임 (codex login 전제) — 같은 역할·스키마를 `codex exec` 5병렬+종합으로
+node .claude/skills/channeltalk-plugin-judge/workflow/codex-panel.mjs         # [--only <judge>] [--judges N] [--no-synth]
+→ out/codex-<stamp>/{judge-*.json, synthesis.json, report.json}   # report.json.loop_healthy 로 판정
 ```
 또는 Agent 로 5인 심사관 + `head-judge-synthesizer` 를 직접 spawn(패널 병렬 → 종합).
 
@@ -31,7 +35,8 @@ Workflow({ scriptPath: ".claude/skills/channeltalk-plugin-judge/workflow/judge-p
 진입점/절차   | .claude/skills/channeltalk-plugin-judge/SKILL.md
 패널(심사관)  | .claude/agents/{hackathon-judge,domain-pm-reviewer,senior-architect-reviewer,redteam-skeptic,ax-ai-native-reviewer}.md
 종합 심판     | .claude/agents/head-judge-synthesizer.md   (가중합·밴드·gap_to_first)
-루프          | .claude/skills/channeltalk-plugin-judge/workflow/judge-panel.mjs   (5 병렬 채점 → 종합)
+루프(Claude)  | .claude/skills/channeltalk-plugin-judge/workflow/judge-panel.mjs   (Workflow: 5 병렬 채점 → 종합)
+루프(Codex)   | .claude/skills/channeltalk-plugin-judge/workflow/codex-panel.mjs   (node CLI: codex exec 5 병렬 → 종합, strict 스키마 파생)
 스키마        | .claude/skills/channeltalk-plugin-judge/schemas/{panel-verdict,synthesis}.schema.json
 런 산출       | out/<stamp>/{panel-verdicts.json,synthesis.json,report.md}   [gitignore]
 ```

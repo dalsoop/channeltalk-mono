@@ -33,7 +33,7 @@ node scripts/build_receipt.mjs \
   --reviews out/<run>/reviews --out out/<run>/run-receipt.json   # 파생 영수증 조립
 node scripts/refresh_surface.mjs                            # (선택·오프라인) pin 된 실 스펙에 표면 대조·리포트
 node scripts/refresh_surface.mjs --fetch                    # (선택·online 1회) 공개 swagger 재다운로드해 pin 갱신
-node test/run.mjs                                           # §11 결정적 회귀 테스트(25 케이스)
+node test/run.mjs                                           # §11 결정적 회귀 테스트(29 케이스)
 ```
 
 절차(온보딩→diff→매뉴얼→verify→뎁스)와 명령·경계는 스킬 `SKILL.md` 에 있다.
@@ -139,10 +139,10 @@ PUT→PATCH)를 잡아 교정했다(우리 게이트가 우리가 지어낸 걸 
 오케스트레이터는 라운드·점수만 중계하고 손으로 매뉴얼을 쓰지 않는다.
 
 **5. 어떻게 검증했나?**
-아래 **## 검증** 참조 — §11 결정적 테스트 **25 케이스**(스키마 유효·happy·멱등·secret 음성·신기능 delta·
-정책 플래그·counts 모양·secret 오탐/이빨/꺾쇠우회/접두/hex24/소문자40/대문자40/꺾쇠-문자시작/구분자분리/순수숫자·영수증 일치·receipt 파생·**pin 된 실 스펙 대조 4종**) + `www.example.com` 실제 런 결과
+아래 **## 검증** 참조 — §11 결정적 테스트 **29 케이스**(스키마 유효·happy·멱등·secret 음성·신기능 delta·
+정책 플래그·counts 모양·secret 오탐/이빨/꺾쇠우회/접두/hex24/소문자40/대문자40/꺾쇠-문자시작/구분자분리/순수숫자·영수증 일치·receipt 파생·**pin 된 실 스펙 대조 4종**·**maker→checker 결정적 검증축 4종**[정상 approve + 예외 3: 신규 누락·PII주의 누락·secret 누출]) + `www.example.com` 실제 런 결과
 (파생 receipt + 신선 3축 리뷰어) + 성숙 연동사 `mature-site` delta 런 + 스킬 구조(plugin.json·SKILL.md
-frontmatter) 정합. 모두 **25/25 통과**.
+frontmatter) 정합. 모두 **29/29 통과**. AI maker→checker 루프 산출도 `node scripts/verify_manual.mjs`(exit 0/3) 로 재검증되며, 루프 워크플로 파일이 `node --check` 로 "실패"하는 것은 런타임 async-wrap 규약상 **설계상 정상**이다(플레인 node 실행 파일 아님).
 
 ---
 
@@ -150,8 +150,8 @@ frontmatter) 정합. 모두 **25/25 통과**.
 
 ### 결정적 테스트 (§11 — `node test/run.mjs`)
 
-`lib/*.mjs` 순수 함수(+`buildReceipt`)만 호출하는 회귀 테스트(네트워크·시각 없음 — pin 된 스펙도 로컬
-파일로 읽음). 현재 **25 케이스, 25/25 통과**(파일 `test/run.mjs`+`cases/*.mjs` 의 `record(...)` 호출 수와 1:1 —
+`lib/*.mjs` 순수 함수(+`buildReceipt`+`verifyManual`)만 호출하는 회귀 테스트(네트워크·시각 없음 — pin 된 스펙도 로컬
+파일로 읽음). 현재 **29 케이스, 29/29 통과**(파일 `test/run.mjs`+`cases/*.mjs` 의 `record(...)` 호출 수와 1:1 —
 지어낸 수치 아님):
 
 | 테스트 | 기대 |
@@ -181,6 +181,10 @@ frontmatter) 정합. 모두 **25/25 통과**.
 | **fabricated_feature_fails_spec** | 스펙에 없는 가짜 REST feature(`GET /nope`) 주입 → `surfaceInPinnedSpec` **FAIL**(offender 지목) |
 | **spec_lock_and_provenance** | 표면 `spec_lock.sha256` 이 provenance-lock 과 일치, `op_count` **163**, provenance 는 pinned|inferred 뿐, tally **{pinned:18, inferred:3}** |
 | **upsert_patch_and_list_absent** | 교정 반영 확인: `user.upsert` method **PATCH**(path `/open/v5/users/{userId}`), `user.list` **부재** |
+| **manual_verify_approve_clean** | maker→checker 결정적 검증축(`verify_manual`) — 신규 3건 전수 언급 + PII 2건 주의 + secret 0 → **approve**, missed 0 |
+| **manual_verify_missing_feature** | 신규 id 하나 누락한 매뉴얼 → **revise** · `missing_feature`(그 id 지목) — 누락을 재현 가능하게 잡음 |
+| **manual_verify_missing_pii_notice** | PII 기능 언급하되 주의 표지어 없음(±600창 격리) → **revise** · `missing_pii_notice`(그 id 지목) |
+| **manual_verify_secret_leak** | 매뉴얼 예제에 실 토큰 누출 → **revise** · `secret_leak`(lib/gates 재사용) |
 
 ### `www.example.com` 실제 런 결과
 
@@ -230,7 +234,7 @@ new_inferred 3). 산출 경로: `skills/channeltalk-integration-researcher/out/<
 
 - `.codex-plugin/plugin.json` — `name`(kebab) + `version` + `description` + `skills:"./skills/"`, `JSON.parse` 유효.
 - `skills/channeltalk-integration-researcher/SKILL.md` — frontmatter `name`+`description` 유효, `## Commands`/`## Boundaries`/`## Exit criteria` 포함.
-- 조립 트리 안에서 `scripts/*.mjs`·`lib/*.mjs`·`test/run.mjs` 전부 `node --check` 통과, import 재작성(`../lib/`)으로 스모크 `verify_manual` approve 재현.
+- 조립 트리 안에서 `scripts/*.mjs`·`lib/*.mjs`·`test/run.mjs` 전부 `node --check` 통과, import 재작성(`../lib/`)으로 스모크 `verify_manual` approve 재현. **예외**: `skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs` 는 런타임 async-wrap 스크립트(top-level `return`/`phase`·`agent`·`parallel` 글로벌)라 `node --check` 가 `Illegal return statement` 로 "실패"하는 게 정상 — 플레인 node 로 실행하는 파일이 아니라 Workflow/Codex 런타임이 감싼다. 루프의 **산출**은 `verify_manual`(node, exit 0/3) + `cases/manual-verify.mjs`(회귀 4)로 재검증한다.
 - **팀 참조 무결성(dangling 0)** — `agents/channeltalk-*.md` 4개가 참조하는 `skills/channeltalk-manual-team/references/channeltalk-manual-philosophy.md` + `schemas/{accuracy,completeness,privacy}-verdict.schema.json` 이 조립 트리에 **전부 실재**한다(제출물에서 팀 루프가 자족적으로 돌 수 있음).
 
 ---
@@ -246,7 +250,7 @@ src/
     │   ├── scripts/{diff_surface,verify_manual,record_depth,build_receipt,refresh_surface}.mjs
     │   ├── lib/{surface,pii,gates,diff}.mjs · schemas/*.json
     │   ├── ssot/{api-surface,channel-swagger,provenance-lock}.json   pin 된 실 스펙 + 표면 + 해시 lock
-    │   ├── test/run.mjs + test/cases/*.mjs   §11 결정적 테스트(25 케이스)
+    │   ├── test/run.mjs + test/cases/*.mjs   §11 결정적 테스트(29 케이스)
     │   ├── agents/channeltalk-*.md           maker + reviewer 3축(정확·완전·개인정보)
     │   └── customers/<site>/{profile,baseline}.json
     └── channeltalk-manual-team/              신선 평가 3축 팀(위 agents 가 참조)

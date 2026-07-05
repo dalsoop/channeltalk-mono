@@ -49,6 +49,21 @@ Workflow({ scriptPath: ".../workflow/channeltalk-manual-loop.mjs",
 - **개인정보 보수**: pii/policy 있는 기능은 §6 방향별 주의 필수. 예제는 플레이스홀더만.
 - **무인 진행**: 루프 중 사람에게 묻지 않는다. 라운드·점수만 중계.
 
+## 재현·검증 (node) — AI 루프 산출은 결정적으로 재검증된다
+
+이 루프의 신뢰는 "AI가 잘했다"가 아니라 **산출을 node 로 독립·결정적으로 재검증**하는 데 있다.
+
+- **워크플로 파일은 런타임 래핑 스크립트다.** `workflow/channeltalk-manual-loop.mjs` 는 `export const meta` + `phase()/agent()/parallel()` 글로벌 + top-level `return/await` 을 쓰는 **Workflow/Codex 플러그인 런타임 전용**이다(헤더 규약 명시). 그래서 `node --check` 는 `Illegal return statement` 로 "실패"하는데 이는 **설계상 정상**이다 — 플레인 `node file.mjs` 로 실행하는 파일이 아니라 런타임이 async-wrap 한다. 검증 대상은 이 파일의 문법이 아니라 **루프의 산출**이다.
+- **산출 재검증(결정적, node 실행 가능):**
+  ```bash
+  # 1) 개별 run 의 매뉴얼을 신선 눈으로 재검증 — exit 0=approve / 3=revise (CI 계약)
+  node apps/channeltalk-integration-researcher/scripts/verify_manual.mjs \
+    --changes out/<run>/changes.json --manual out/<run>/update-manual.md
+  # 2) 결정적 검증축 자체의 회귀(정상 approve + 예외 3: 신규 누락·PII주의 누락·secret 누출)
+  node apps/channeltalk-integration-researcher/test/run.mjs   # cases/manual-verify.mjs 포함
+  ```
+- **shipped-runs = 루프 실행 증거.** `out/<run>/{update-manual.md(maker 산출), reviews/{accuracy,completeness,privacy}-verdict.json(checker 3 산출), manual-verdict.json(결정적 게이트), run-receipt.json(게이트 캐스케이드 5/5·approve·3/3)}`. 이 산출은 위 node 명령으로 언제든 재검증된다.
+
 ## 파일 레이아웃
 ```
 .claude/agents/channeltalk-manual-maker.md            maker (1)

@@ -10,6 +10,7 @@
 //   cases/receipt.mjs      run_receipt / build_receipt 파생 정합성
 //   cases/secret-gate.mjs  secret 게이트 레드팀 회귀(실토큰 CAUGHT + slug/placeholder 오탐 0)
 //   cases/pinned-spec.mjs  pin 된 실 OpenAPI 스펙 대조(pinned feature 실재 + 가짜 FAIL + 교정 확인)
+//   cases/manual-verify.mjs maker→checker 결정적 검증축(verify_manual) 회귀 — approve + 예외 3(누락·PII·secret)
 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ import * as piiCase from "./cases/pii.mjs";
 import * as receiptCase from "./cases/receipt.mjs";
 import * as secretGateCase from "./cases/secret-gate.mjs";
 import * as pinnedSpecCase from "./cases/pinned-spec.mjs";
+import * as manualVerifyCase from "./cases/manual-verify.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SURFACE_PATH = join(__dirname, "..", "ssot", "api-surface.json");
@@ -33,7 +35,7 @@ const { results, record } = createRecorder();
 const ctx = { record, surface, surfaceSchema };
 
 // 케이스 실행(도메인 순서 — 출력은 도메인끼리 묶여 나온다).
-for (const mod of [surfaceCase, diffCase, piiCase, receiptCase, secretGateCase, pinnedSpecCase]) {
+for (const mod of [surfaceCase, diffCase, piiCase, receiptCase, secretGateCase, pinnedSpecCase, manualVerifyCase]) {
   mod.run(ctx);
 }
 
