@@ -3,7 +3,6 @@
   "baseline_version": 1,
   "integrated_at_surface_version": 1,
   "integrated": [
-    "openapi.user.list",
     "openapi.user.get",
     "openapi.userchat.list",
     "openapi.userchat.get",

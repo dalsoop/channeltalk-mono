@@ -20,6 +20,16 @@
       "items": { "type": "string" },
       "description": "누락된 신규 feature id 목록"
     },
+    "checked": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 무엇을 대조했는지 검증 흔적 (예: 'changes.new_features 22 id 전수를 매뉴얼 섹션 제목과 대조', '각 섹션 무엇/왜 + 어떻게 알맹이 존재 확인'). 채점을 실제로 수행했다는 근거이므로 비워두지 않는다."
+    },
+    "sampled_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "매뉴얼 섹션 존재·알맹이를 실제로 확인한 feature id 표본 (전수면 전수 id)."
+    },
     "fixes": {
       "type": "array",
       "items": {

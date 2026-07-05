@@ -1,0 +1,24 @@
+{
+  "count": 0,
+  "verdict": "pass",
+  "offenders": [],
+  "fixes": [],
+  "checked": [
+    "PII 주의 존재 대조: 이 실행 changes.json has_pii=true 8건(user.get·user.upsert·user.event.create·message.list·manager.list·manager.get·webhook.message.created·webhook.user.created) 각 섹션에 '개인정보 주의' 블록 존재 — 누락 0건. (주: 이 실행 surface 21건에 openapi.user.list 없음)",
+    "방향 정합(§6) 대조: R 4건 user.get(L64-66)·message.list(L360-362)·manager.list(L456-458)·manager.get(L488-490) 은 최소요청+수신 마스킹 / W 2건 user.upsert(L101-103) 외부전송·수집이용 동의·위탁/제3자 검토, user.event.create(L165-166) property 혼입 시 W규칙 적용 / CB 2건 webhook.message.created(L652-654)·webhook.user.created(L726-728) x-signature HMAC 서명검증+본문 마스킹 — 방향 불일치 0건",
+    "정책 플래그 반영 대조: hold_pii_transmit 1건(user.upsert)에 '도입 보류 권고' 문구(L103), mask_inbound 6건(user.get·message.list·manager.list·manager.get·webhook.message.created·webhook.user.created)에 '수신 마스킹' 문구 실제 존재 — 누락 0건",
+    "예제 secret 누출 대조: 21개 섹션 예제 전수 확인 — 24자+ base64/hex 실토큰 grep 0건, key/secret/signature/PII 슬롯이 전부 플레이스홀더(<KEY>·<SECRET>·<SIGNATURE>·<PII:name/email/mobile/plainText>·<PII>) — 실키·실 개인정보 0건 (L5 sha256 57249a6c…f1a4 는 생략표기된 spec-lock 해시, 자격증명 아님)",
+    "webhook.userchat.opened(has_pii=false) 대조: PII 없어도 §6 CB 규칙상 x-signature 서명 검증 필수 서술 존재(L688) 확인"
+  ],
+  "sampled_ids": [
+    "openapi.user.get",
+    "openapi.user.upsert",
+    "openapi.user.event.create",
+    "openapi.message.list",
+    "openapi.manager.list",
+    "openapi.manager.get",
+    "webhook.message.created",
+    "webhook.userchat.opened",
+    "webhook.user.created"
+  ]
+}

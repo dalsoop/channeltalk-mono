@@ -1,0 +1,37 @@
+{
+  "run": "260705190001-mature-site",
+  "site": "mature-site",
+  "stamp": "260705190001",
+  "surface_version": 5,
+  "counts": {
+    "surface": 21,
+    "integrated": 7,
+    "new": 14,
+    "new_with_pii": 5,
+    "policy_hold": 0,
+    "new_inferred": 3,
+    "removed": 0
+  },
+  "gates": {
+    "diff": "5/5 pass",
+    "manual_deterministic": "approve (missed 0)",
+    "llm_semantic": "3/3 pass (accuracy·completeness·privacy, count 0)"
+  },
+  "not_verified": [
+    "webhook.message.created",
+    "webhook.userchat.opened",
+    "webhook.user.created"
+  ],
+  "produced": [
+    "changes.json",
+    "depth-ledger.jsonl",
+    "manual-verdict.json",
+    "reviews/accuracy-verdict.json",
+    "reviews/completeness-verdict.json",
+    "reviews/privacy-verdict.json",
+    "surface.snapshot.json",
+    "update-manual.md"
+  ],
+  "generated_by": "build_receipt",
+  "clean": true
+}

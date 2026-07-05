@@ -5,12 +5,12 @@
 workflow: skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs
 
 args:
-  run: "260705190000-ranode.net"        # out/<run> 슬러그
+  run: "260705190000-example.com"        # out/<run> 슬러그
   max_rounds: 3                          # CHANNELTALK.md §5.4 가드레일과 동일
 
   # out/<run>/changes.json 파싱본 (결정적 diff — CHANNELTALK.md §4.4)
   changes:
-    customer: "www.ranode.net"
+    customer: "www.example.com"
     surface_version: 4
     baseline_version: 1
     profile: { integration_stage: "none", pii_policy: "no-transmit", depth: 0 }
@@ -117,10 +117,10 @@ args:
 #
 # 호출 (SKILL 오케스트레이터):
 #   Workflow({ scriptPath: ".../workflow/channeltalk-manual-loop.mjs", args: <위 args> })
-#   → best.manual.markdown 을 out/260705190000-ranode.net/update-manual.md 로 쓰고,
+#   → best.manual.markdown 을 out/260705190000-example.com/update-manual.md 로 쓰고,
 #     결정적 verify 로 실측(--run 플래그 없음 — 파일 경로를 직접 준다):
 #       node apps/channeltalk-integration-researcher/scripts/verify_manual.mjs \
-#         --changes out/260705190000-ranode.net/changes.json \
-#         --manual  out/260705190000-ranode.net/update-manual.md \
-#         --out     out/260705190000-ranode.net/manual-verdict.json
+#         --changes out/260705190000-example.com/changes.json \
+#         --manual  out/260705190000-example.com/update-manual.md \
+#         --out     out/260705190000-example.com/manual-verdict.json
 #     exit approve=0·revise=3 → approve(0) 시 출하.

@@ -4,6 +4,11 @@
 # Node
 node_modules/
 
+# Secrets / env (never commit)
+.env
+.env.*
+!.env.example
+
 # Agent/run outputs (regenerable)
 out/
 

@@ -1,0 +1,34 @@
+{
+  "count": 0,
+  "verdict": "pass",
+  "offenders": [],
+  "checked": [
+    "method+path 21건 전수 대조 (매뉴얼 섹션 ↔ surface.features[].method/path) — 지어낸 엔드포인트 0건",
+    "auth 헤더 규칙 확인: REST 18건 x-access-key+x-access-secret, webhook 3건 x-signature (HMAC) — 표면 auth 배열과 일치, 지어낸 헤더 0건",
+    "params 대조: userchat.list(state,sortOrder,limit)·message.list(userChatId,limit,since)·manager.list(limit)·bot.create(없음)·channel.get(없음) 등 표면 params 와 일치",
+    "pii_fields 대조: user.get(name,email,mobileNumber,avatarUrl,profile)·user.upsert·message.list(plainText,files)·manager.list/get(name,email)·webhook.message.created(entity.plainText)·webhook.user.created(entity.name/email/mobileNumber) 모두 surface·changes 와 일치, 없는 필드 주장 0건",
+    "provenance 정직 확인: pinned 18 / inferred 3 라벨이 surface.provenance 와 일치, mock 서술 없음, channel.get 은 pinned 로 정직 라벨",
+    "verified-live 단정 부재 확인: 매뉴얼 L5·L9 에서 'pinned=스펙 스냅샷 일치, 라이브 호출 확인 아님' 명시, verified-live 단정 0건",
+    "user.upsert = PATCH 확인 (surface method=PATCH, 매뉴얼 L78 'PATCH ... (PUT 아님)')",
+    "spec_lock 해시 인용 확인: 매뉴얼 sha256 57249a6c…f1a4 / v28.0.3 ↔ surface.spec_lock (57249a6cd3bb…079f1a4, 28.0.3) 일치",
+    "파생 카운트 확인: new_with_pii=8(has_pii:true 8건)·policy_hold=1(user.upsert)·inferred=3 이 매뉴얼 L28/L734 서술과 일치"
+  ],
+  "sampled_ids": [
+    "openapi.user.get",
+    "openapi.user.upsert",
+    "openapi.user.delete",
+    "openapi.user.event.create",
+    "openapi.userchat.list",
+    "openapi.message.list",
+    "openapi.message.send",
+    "openapi.group.message.send",
+    "openapi.manager.list",
+    "openapi.manager.get",
+    "openapi.bot.create",
+    "openapi.channel.get",
+    "webhook.message.created",
+    "webhook.userchat.opened",
+    "webhook.user.created"
+  ],
+  "fixes": []
+}

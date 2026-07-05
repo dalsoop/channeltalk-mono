@@ -33,7 +33,7 @@ maker→checker 에이전트 루프(AX 해커톤 Codex 플러그인). 현재는 
 결정적 스크립트| scripts/verify_manual.mjs (checker, approve|revise) · scripts/record_depth.mjs (뎁스 누적·--adopt)
 매뉴얼 팀    | .claude/agents/channeltalk-{manual-maker,accuracy-reviewer,completeness-reviewer,privacy-reviewer}.md
              | .claude/skills/channeltalk-manual-team/  (SKILL·workflow·verdict 스키마 3·philosophy)
-고객 시드    | customers/{www.ranode.net,mature-site}/{profile,baseline}.json  (§12-B)
+고객 시드    | customers/{www.example.com,mature-site}/{profile,baseline}.json  (§12-B)
 런 산출      | out/<stamp>-<customer>/  (changes·surface.snapshot·update-manual·manual-verdict·run-receipt) [gitignore]
 ```
 <!-- END AGENTS-INDEX (managed) -->
