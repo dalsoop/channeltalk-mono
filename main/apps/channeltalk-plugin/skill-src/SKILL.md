@@ -95,3 +95,15 @@ node test/run.mjs
 - `verify_manual` **approve** 이고 `missed` 길이 **0** (신규 id 누락·PII 주의 누락·secret 누출 없음).
 - `changes.new_features` 의 **신규 id 전수**가 매뉴얼에 각각 섹션으로 커버됨(완전성).
 - `inferred` 기능이 **`not_verified` 로 보고**됨(정직한 provenance).
+
+## 정보 부족·잘 안 풀릴 때 (degraded)
+
+원칙: **모르면 지어내지 말고, 막히면 멈추고 이유를 보고**한다.
+
+- **프로필/baseline 없음** → 온보딩 4문항으로 채운다(미연동이면 `integrated:[]` = 전체 카탈로그).
+- **`diff_surface` exit 1** (필수 인자 없음·스키마 위반) → 진행 중단, 메시지 그대로 보고.
+- **diff 게이트 FAIL(exit 2)** → 매뉴얼 작성으로 넘어가지 말고 `gate_offenders` 를 보고(지어냄·누락·secret·PII 미플래그 사전 차단).
+- **`provenance=inferred`** → 매뉴얼에 "문서 검증 필요" 배지 + `not_verified` 로 보고. **라이브로 단정 금지.**
+- **PII 정책 `undecided`/`consent`/`transmitting`** → 기계 flag 없음 → 매뉴얼이 동의·위탁·법무/보안 검토를 서술로 강제(보수적).
+- **verify `revise` 가 3라운드/2R 비개선** → 조기종료 + keep-best, **clean pass 아님을 ledger 에 명시**.
+- **표면이 실제와 어긋날 위험** → §8 "실제 연동 전 공개 문서로 재검증" 안내(mock 한계 자백, `verified-live` 금지).
