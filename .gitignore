@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Agent/run outputs (regenerable)
+out/
+
+# Locks / transient
+*.lock
+scheduled_tasks.lock

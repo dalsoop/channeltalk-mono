@@ -1,0 +1,52 @@
+{
+  "name": "spec-author-team",
+  "purpose": "한 줄 에이전트 요청을 스키마에 맞는 maker→checker 팀 spec(JSON)으로 구조화한다.",
+  "domain_ssot": "/Users/jeonghan/Documents/WORK/WORKSPACE/apps/agent-creator-mono/main/apps/agent-factory/.claude/skills/agent-factory/schemas/agent-spec.schema.json",
+  "render_or_run": "없음 — 산출은 agent-spec.schema.json을 만족하는 spec JSON 한 개. 검증은 호출자가 JSON.parse + draft-07 스키마 검증으로 실측.",
+  "max_rounds": 3,
+  "maker": {
+    "role": "한 줄 요청을 읽고 목적·산출·성공조건·검사렌즈를 뽑아 agent-spec 스키마에 맞는 팀 spec을 작성하는 spec 작성자",
+    "input": "한 줄 에이전트 요청(자연어) + agent-spec.schema.json",
+    "output": "agent-spec.schema.json을 만족하는 spec JSON 한 개"
+  },
+  "success_conditions": [
+    {
+      "name": "schema_validity",
+      "metric": "draft-07 스키마 검증 위반(required 누락·enum 위반·additionalProperties 위반·타입 오류) 개수",
+      "direction": "minimize",
+      "gate": "==0"
+    },
+    {
+      "name": "condition_measurability",
+      "metric": "success_conditions 각 항목의 metric이 실제로 셀 수 있는 신호인지(0~10 또는 카운트로 환산 가능, 모호어 없음) 0~10",
+      "direction": "maximize",
+      "gate": ">=8.0"
+    },
+    {
+      "name": "checker_freshness",
+      "metric": "checkers가 maker와 분리된 신선 렌즈로 success_conditions를 다른 각도에서 보는 정도(자기채점 0건, 렌즈 중복 0건) 0~10",
+      "direction": "maximize",
+      "gate": ">=8.0"
+    },
+    {
+      "name": "scope_honesty",
+      "metric": "한 줄 요청에 없는 능력을 spec이 지어낸 개수(범위 과장·근거 없는 산출·환상 SSOT)",
+      "direction": "minimize",
+      "gate": "==0"
+    }
+  ],
+  "checkers": [
+    {
+      "name": "spec-schema-conformance-reviewer",
+      "lens": "산출 JSON을 agent-spec.schema.json(draft-07)으로만 본다 — required 5필드 존재, maker/success_conditions/checkers 내부 required, enum(direction)·additionalProperties·타입 위반을 정적으로 잡는다. 의미는 보지 않고 형식만."
+    },
+    {
+      "name": "spec-measurability-reviewer",
+      "lens": "각 success_condition을 '검사도구가 이걸로 채점할 수 있나' 렌즈로 본다 — metric이 셀 수 있는 실측 신호인지, gate가 metric/direction과 정합한지, 모호어(좋다·적절·자연스럽다)로 도망치지 않는지."
+    },
+    {
+      "name": "spec-scope-honesty-reviewer",
+      "lens": "원래 한 줄 요청과 spec을 대조하는 렌즈 — 요청에 없는 산출·능력·domain_ssot를 지어냈는지, checker가 maker를 자기채점하지는 않는지, 범위가 정직하게 좁혀졌는지."
+    }
+  ]
+}
