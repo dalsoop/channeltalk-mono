@@ -1,0 +1,59 @@
+# AGENTS.md — channeltalk-mono
+
+AI coding agent가 매 세션 **항상** 읽는 작업 규칙(수동 컨텍스트). 스킬처럼 "지금 찾아볼까"
+결정하는 마찰 없이 시스템 프롬프트에 상주한다. 그래서 **스킬보다 이 파일을 우선**한다.
+근거: Vercel, "AGENTS.md outperforms skills in our agent evals"
+(https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals) — passive context = 100%,
+skills = 53~79%. 원리: **retrieval-led > pre-training-led**. 세부는 아래 인덱스에서 그때그때 읽는다.
+
+> 정본 분리: 이 파일엔 **규칙 + 어디를 읽어야 하는지(인덱스)** 만 둔다. 도메인 본문·긴 계약은
+> `CHANNELTALK.md`(정본)에 있고, 여기서 중복하지 않는다. 값·규칙이 바뀌면 정본을 먼저 고친다.
+
+## 이 저장소
+
+`channeltalk-mono` = **채널톡 연동 리서처**(AX 해커톤 Codex 플러그인) 작업 공간.
+한 고객사의 기존 채널톡 연동(baseline) 대비 **새로 생긴 Open API 기능**을 **PII 안전하게**
+매뉴얼로 뽑는 **maker→checker 에이전트 루프**. 설계 정본 = `CHANNELTALK.md`.
+
+- 구조: 일반 git 저장소(다른 `*-mono`의 bare+worktree 아님). 작업 파일은 `main/apps/<app>/`.
+- 로그훅: repo 루트에서 세션을 켜야 `.claude/settings.json`·`tools/save_log.py`·`logs/`가 맞물린다
+  (해커톤 제출 로그는 **무편집**).
+
+## 구현 규약 (MUST — 상시 적용)
+
+`CHANNELTALK.md §13`의 압축본. 위반은 반려한다.
+
+1. **하드코딩 금지** — 값·규칙은 정본→`ssot/*.json`·`schemas/*.json`·config에서 읽는다.
+2. **유즈케이스 체크** — 새 코드는 `CHANNELTALK.md §1·§11` 유즈케이스에 매핑될 때만.
+3. **모듈화** — `diff_surface`·`verify_manual`·`record_depth`·PII 게이트·mock 로더를 독립 모듈로.
+4. **루프는 직접 돌리지 말고 팀에 위임** — 오케스트레이터는 maker→checker 팀을 구성·중계만. (→8·9)
+5. **lint·모킹 결정적** — `node --check`+스키마 `JSON.parse`. mock은 오프라인·결정적, 네트워크·실키 금지.
+   `provenance`(mock/inferred) 표기, `verified-live` 금지. secret 게이트로 실키 토큰 차단.
+6. **평가(checker) 에이전트 분리** — maker와 다른 신선 에이전트가 정확·완전·PII안전 3축 채점(maker≠checker).
+7. **완성 후 테스트코드** — `§11` 결정적 테스트(happy·멱등·secret음성·delta·verify음성·정책플래그·구조)를 회귀 게이트로.
+8. **에이전트 루프는 `agent-factory` 방식 재사용** — brief/spec→architect(maker)→inspector(checker)→게이트→실측 출하.
+9. **스킬보다 에이전트 md 우선** — 역할(maker·checker·평가)은 `.claude/agents/*.md`로. 스킬은 진입점·절차만.
+
+## 인덱스 (retrieval-led — 필요할 때 그 파일을 연다)
+
+<!-- BEGIN AGENTS-INDEX (managed; 파일 추가 시 갱신) -->
+```
+[channeltalk-mono index]|root: .
+설계정본        | CHANNELTALK.md                (도메인·데이터 계약·게이트·PII·제출 §전체)
+  ├ 데이터모델  | CHANNELTALK.md §4             (ssot/customers/out JSON 계약)
+  ├ 루프·게이트 | CHANNELTALK.md §5             (maker→checker, diff 4게이트, done/keep-best)
+  ├ PII 규칙    | CHANNELTALK.md §6             (방향성 R/W/CB, pii_policy→policy_flag)
+  ├ 제출패키징  | CHANNELTALK.md §10            (Codex plugin.json·SKILL·logs 무편집)
+  ├ 검증        | CHANNELTALK.md §11            (결정적 테스트 표)
+  ├ mock 시드   | CHANNELTALK.md §12·§12-B      (v5 표면 22 features, baseline 시나리오)
+  └ 구현규약    | CHANNELTALK.md §13            (위 MUST 원문)
+루프 재사용     | main/apps/agent-factory/AGENTS.md          (§규약8 근거)
+대상 앱         | main/apps/channeltalk-integration-researcher/AGENTS.md  (구현 대상, §정본 참조)
+로그훅          | .claude/settings.json · tools/save_log.py  (Stop·SessionEnd → logs/)
+```
+<!-- END AGENTS-INDEX (managed) -->
+
+## 하위 우선순위
+
+가까운 `AGENTS.md`가 상위를 override 한다(앱 디렉터리의 `AGENTS.md` 우선). Codex 전용 완전
+대체가 필요할 때만 같은 폴더에 `AGENTS.override.md`.
