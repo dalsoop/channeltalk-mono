@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { loadSurface, loadJson, validate } from "../lib/surface.mjs";
 import { computeChanges, gatesPass } from "../lib/diff.mjs";
 import { policyFlag } from "../lib/pii.mjs";
+import { findSecrets } from "../lib/gates.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SURFACE_PATH = join(__dirname, "..", "ssot", "api-surface.json");
@@ -158,6 +159,35 @@ function baseline(integrated = []) {
       policy_hold: changes.counts.policy_hold,
       new_inferred: changes.counts.new_inferred,
     },
+  );
+}
+
+// ── 7. no_false_positive_on_slug (마크다운 앵커·경로는 secret 아님) ─
+{
+  // 구분자(- _ / + =)를 문자 종류로 세면 순소문자 슬러그·경로가 오탐된다(회귀 방지).
+  const prose =
+    "method/path/auth/params/ " +
+    "--openapiusereventcreate --openapiuseruserchatslist --openapiuserchatsessionslist " +
+    "--openapigroupmessagesend --openapichannelget-inferred --webhookmessagecreated-inferred " +
+    "--webhookuserchatopened-inferred --webhookusercreated-inferred";
+  record(
+    "no_false_positive_on_slug",
+    { text: "anchor slugs + method/path/auth/params/ prose" },
+    { hits: 0 },
+    { hits: findSecrets(prose).length },
+  );
+}
+
+// ── 8. teeth_real_token_still_caught (실토큰은 계속 잡혀야 함) ─────
+{
+  const base64Key = "aG9uZXN0bHlmYWtlYnV0bG9uZ2Vub3VnaHRva2VuMTIzNDU2"; // 대소문자+숫자 섞인 실키 예
+  const hex40 = "0123456789abcdef0123456789abcdef01234567"; // 40자 hex 토큰
+  const text = `x-access-key: ${base64Key}\nx-access-secret: ${hex40}`;
+  record(
+    "teeth_real_token_still_caught",
+    { text: "base64 key + 40-char hex token" },
+    { hits: [base64Key, hex40] },
+    { hits: findSecrets(text) },
   );
 }
 
