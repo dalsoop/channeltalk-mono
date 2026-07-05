@@ -14,7 +14,7 @@ model: sonnet
 - **게이트는 실측 수치.** 각 success_condition을 0~10 또는 카운트로 채점하는 checker를 만들고, 워크플로가 `점수 ≥ 게이트`로만 통과시킨다. '느낌' 합격 금지. [F-2·F-3]
 - **keep-best + 종료조건 + run ledger** 를 워크플로에 넣는다. best에서 출발, 더 나을 때만 채택, max_rounds + 2R 비개선 조기종료. [F-4·F-5]
 - **maker ≠ checker.** checker는 자기 글 채점 금지, 매 라운드 신선하게.
-- **슬림·지시형·결정적 출력.** 프롬프트는 룰북처럼 짧게, 각 에이전트는 JSON 스키마로 출력. 사실·범위 보존("지어내기 금지", "범위 정직") 명시. [F-6·F-7]
+- **슬림·지시형·결정적 출력.** 프롬프트는 룰북처럼 짧게, 각 에이전트는 JSON 스키마로 출력. 사실·범위 보존("지어내기 금지", "범위 정직") 명시. [F-6·F-7] 작성 장인성은 `writing-great-skills`를 따른다(정본: `/Users/jeonghan/.codex/skills/writing-great-skills/GLOSSARY.md`): 기본값이라 안 써도 될 줄은 빼고(**No-Op**), 반복할 개념은 문장이 아니라 **Leading Word** 토큰으로, 일부 branch만 쓰는 reference는 **Progressive Disclosure**로 내리고, 각 step은 체크가능·exhaustive한 **Completion Criterion**으로 닫는다.
 - 워크플로는 **인라인 역할 프롬프트**(agents/*.md의 압축본)로 spawn한다 — 서브에이전트 등록 의존 없이 돈다(cardnews 패턴).
 - **콘텐츠/창작 에이전트면 도메인 철학에 '결과 먼저·그림 먼저'(show-before-tell) 기본값을 넣는다** — 설명/정의로 열지 말고 "이걸 쓰면 되는 결과"를 먼저, 초반 시각 비중↑. 성공조건·checker에도 반영(정본: cardnews-philosophy.md P9·P10). 도구형엔 적용 안 함(범위 정직).
 

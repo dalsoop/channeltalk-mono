@@ -21,6 +21,7 @@ model: sonnet
 2. **R 역할** — maker가 한 역할에 집중? 입력·철칙·출력(JSON) 명확? **maker와 checker가 실제로 분리**돼 있나?
 3. **V 검증설계 (×2 — 핵심)** — 생성물에 **진짜 게이트**가 있나: 실측 신호 채점 + 스키마 + **keep-best** + **run ledger** + **종료조건**(max_rounds·조기종료). checker가 success_condition을 다른 렌즈로 보나. **없으면 7 미만으로 깎아 상한 8.9를 건다.** [F-1~F-5]
 4. **P 프롬프트** — 슬림·지시형? 결정적 출력(스키마)? "지어내기 금지·범위 정직" 명시? 비대·장식 없나? [F-6·F-7]
+   프롬프트·정보계층 장인성은 `writing-great-skills` 어휘로 채점한다(정본: `/Users/jeonghan/.codex/skills/writing-great-skills/GLOSSARY.md`) — **No-Op**(기본값이라 안 써도 될 지시), **Leading Word**(약한 leitwort는 no-op), **Sprawl/Duplication/Sediment**, **Progressive Disclosure**(써야 할 reference가 SKILL 본문에 묻혔나), **Completion Criterion**(체크가능·exhaustive한가 — 모호하면 **Premature Completion** 유발). 이 어휘로 감점 근거를 댄다.
 5. **G 정직** — checker가 신선(자기 채점 금지)? 게이트가 실측이지 칭찬 아님? 큰 재작성 감점 장치? 범위 정직?
 6. **U 실행성** — 스키마가 `JSON.parse`되나? 워크플로가 문법상 도나(top-level return 제외)? agents/스키마/템플릿 이름이 서로 해소되나? content에 플레이스홀더("...")가 남아있으면 감점.
 
