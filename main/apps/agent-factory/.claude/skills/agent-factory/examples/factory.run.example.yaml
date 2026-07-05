@@ -1,0 +1,40 @@
+# agent-factory 생성 루프 바인딩 (verification-gated maker→checker, 9/10 게이트)
+# 패턴 출처: gaasher/Agent-Loop-Skills · ADAS/Gödel(메타에이전트 생성→평가→반복) · Reflexion(생성→비평→수정)
+# 오케스트레이터(SKILL.md)가 이 값으로 공장 루프를 돈다. 요청마다 덮어쓸 수 있다.
+
+gate:                      # 결승선 — 장인성 6축 종합
+  agent_score:
+    metric: agent_score    # (S + R + V×2 + P + G + U)/7  (agent-inspector)
+    direction: maximize
+    threshold: 9.0         # >= 9.0 이면 출하
+  verification_design:     # 보조 게이트 — 검증 없는 에이전트는 출하 금지
+    metric: V
+    direction: maximize
+    threshold: 7           # V >= 7 (미만이면 종합 상한 8.9)
+  quality_score: "agent_score"   # keep-best 랭킹 (q = agent_score)
+
+guardrails:                # 무한루프/토큰 낭비 방지
+  max_rounds: 4
+  early_stop_no_improve: 2 # 2R 연속 개선 < 0.3 이면 중단
+  unattended: true
+
+policy:
+  shape: maker_checker     # architect(maker) → inspector(checker)
+  keep_best: true          # 회귀 방지: 최고점 패키지 채택, 재생성도 best 에서 출발
+  maker_ne_checker: true   # inspector 는 자기 글 채점 금지, 매 라운드 신선
+  generate_the_checker: true  # 핵심: 생성물은 maker 뿐 아니라 checker(검사도구)+게이트+루프 포함
+
+roles:
+  maker:    agent-architect   # spec → 패키지 manifest
+  checker:  agent-inspector   # 6축 채점 (schemas/factory-verdict.schema.json)
+
+post_loop:                 # Goodhart 2겹 — 호출자(SKILL)가 실측
+  deterministic_checks:
+    - "quick_validate.py skills/<x>-team"
+    - "node --check workflow/<x>-loop.mjs  (top-level return 에러만 무시)"
+    - "JSON.parse 모든 schemas/*.json"
+  ship_only_if: "의미 9/10 AND 실측 통과"
+
+ledger:                    # run ledger — 매 라운드 한 줄 중계
+  fields: [round, score, V, verdict]
+  relay: "R1 7.4 → R2 8.6 → R3 9.1 ✓출하"
