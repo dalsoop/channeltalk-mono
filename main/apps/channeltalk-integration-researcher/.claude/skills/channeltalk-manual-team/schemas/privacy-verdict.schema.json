@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "privacy_safe verdict — PII 주의·예제 secret·정책 플래그",
+  "type": "object",
+  "required": ["count", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "count": {
+      "type": "number",
+      "minimum": 0,
+      "description": "(pii_fields/policy_flag 있는 기능의 방향별 개인정보 주의 누락 개수) + (예제 secret/실키/실 개인정보 누출 개수). minimize, ==0 이면 통과"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "revise"],
+      "description": "pass = count == 0"
+    },
+    "offenders": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "주의 누락 기능 id 또는 secret 누출 위치"
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["where", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "where": { "type": "string", "description": "기능 id 또는 예제 위치" },
+          "problem": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}
