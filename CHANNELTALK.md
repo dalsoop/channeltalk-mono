@@ -246,7 +246,7 @@ main/apps/
 │   │   ├── manual-verdict.json       결정적/평가 채점
 │   │   └── run-receipt.json          영수증(produced·commands·gates·not_verified·risks)
 │   └── customers/<고객사>/depth-ledger.jsonl   뎁스 누적(런 전반, 추적)
-└── channeltalk-plugin/              조립 대상 — plugin-src·skill-src·README-src·scripts/build_submission
+└── channeltalk-plugin/              조립 대상 — submission/(authored 골격)·scripts/build_submission
     └── out/                          src/ 스테이징 · submission.zip (빌드 산출)
 ```
 - **모든 `out/`은 재생성 가능**(gitignore, 슬래시 앞 없어 어느 깊이든 매칭). `ssot/`·`customers/`·소스·`.claude/`는 추적.

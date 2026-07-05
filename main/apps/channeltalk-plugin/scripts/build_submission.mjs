@@ -2,27 +2,25 @@
 // scripts/build_submission.mjs — 단일 소스에서 Codex 플러그인 제출 트리 조립(§10).
 // 무의존(node 표준 라이브러리만). 결정적(네트워크·랜덤 없음, mtime 은 fs 가 붙임).
 //
-// 소스(단일 원본):
-//   plugin-src/.codex-plugin/plugin.json          ← 매니페스트
-//   skill-src/SKILL.md                             ← 런타임 스킬(조립의 원본)
-//   README-src/README.md                           ← 제출 설명(질문 5문항 + 검증)
+// 소스(authored 골격 = 최종 submission 레이아웃 그대로):
+//   submission/README.md                                   ← 제출 설명(질문 5문항 + 검증)
+//   submission/src/.codex-plugin/plugin.json               ← 매니페스트
+//   submission/src/skills/<name>/SKILL.md                  ← 런타임 스킬
+// 공유 코드(형제 앱에서 overlay):
 //   ../channeltalk-api-mock/{lib,ssot,schemas,test,scripts/diff_surface.mjs}
 //   ../channeltalk-integration-researcher/{scripts/{verify_manual,record_depth}.mjs,.claude/agents,customers}
-//   ../logs (repo 루트 logs) — 무편집 복사
+//   ../../logs (repo 루트 logs) — 무편집 복사
 //
 // 산출(제출 루트 = out/):
-//   out/src/.codex-plugin/plugin.json
-//   out/src/skills/channeltalk-integration-researcher/
-//       SKILL.md · lib/ · ssot/ · schemas/ · test/ · scripts/{diff_surface,verify_manual,record_depth}.mjs
-//       agents/*.md · customers/<site>/{profile,baseline}.json
-//   out/README.md
-//   out/logs/<tool>/<session>.jsonl
-//   out/submission.zip   (zip CLI 있으면)
+//   out/README.md · out/src/.codex-plugin/plugin.json
+//   out/src/skills/<name>/{SKILL.md,lib,ssot,schemas,test,scripts,agents,customers}
+//   out/logs/<tool>/<session>.jsonl · out/submission.zip
 //
-// import 재작성(중요): verify_manual.mjs·record_depth.mjs 는 원래 형제 앱
-//   ../../channeltalk-api-mock/lib/ 를 import 한다. 조립 트리에선 lib 가 같은 스킬 아래이므로
-//   그 상대경로를 ../lib/ 로 rewrite 한다. diff_surface.mjs·test/run.mjs 는 이미 ../lib/·../schemas/·../ssot/
-//   를 쓰므로(스킬 루트 아래 scripts/ · test/ 배치에서 그대로 맞음) 재작성하지 않는다.
+// 조립 원칙: authored 골격(submission/)을 out/ 에 그대로 깔고, 그 위에 공유 코드를 얹는다.
+//   authored 파일은 최종 상대경로에 이미 놓여 있으므로 파편화(-src)나 위치 재배치가 없다.
+// import 재작성(중요): verify_manual.mjs·record_depth.mjs 는 형제 앱 ../../channeltalk-api-mock/lib/ 를
+//   import 한다. 조립 트리에선 lib 가 같은 스킬 아래이므로 ../lib/ 로 rewrite. diff_surface·test/run 은
+//   이미 ../lib·../schemas·../ssot 를 써서 스킬 루트 아래 배치 그대로 맞음(재작성 불필요).
 
 import {
   cpSync,
@@ -50,6 +48,7 @@ const RESEARCHER = join(APPS_ROOT, "channeltalk-integration-researcher");
 
 const SKILL_NAME = "channeltalk-integration-researcher";
 
+const SKELETON = join(PLUGIN_ROOT, "submission"); // authored 골격(최종 레이아웃 미러)
 const OUT = join(PLUGIN_ROOT, "out");
 const SRC = join(OUT, "src");
 const SKILL_DIR = join(SRC, "skills", SKILL_NAME);
@@ -109,13 +108,13 @@ function requirePath(p, label) {
 }
 
 function main() {
-  // 사전 검증: 필수 소스.
-  const pluginJson = requirePath(
-    join(PLUGIN_ROOT, "plugin-src", ".codex-plugin", "plugin.json"),
-    "plugin.json source",
+  // 사전 검증: authored 골격 + 공유 코드.
+  requirePath(join(SKELETON, "README.md"), "submission/README.md");
+  requirePath(join(SKELETON, "src", ".codex-plugin", "plugin.json"), "submission/src/.codex-plugin/plugin.json");
+  requirePath(
+    join(SKELETON, "src", "skills", SKILL_NAME, "SKILL.md"),
+    "submission/src/skills/<name>/SKILL.md",
   );
-  const skillMd = requirePath(join(PLUGIN_ROOT, "skill-src", "SKILL.md"), "SKILL.md source");
-  const readme = requirePath(join(PLUGIN_ROOT, "README-src", "README.md"), "README.md source");
   requirePath(join(MOCK, "lib"), "mock lib/");
   requirePath(join(MOCK, "ssot", "api-surface.json"), "mock ssot/");
   requirePath(join(MOCK, "schemas"), "mock schemas/");
@@ -128,21 +127,17 @@ function main() {
 
   // 깨끗한 staging.
   if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
-  ensureDir(SKILL_DIR);
 
-  // 1) 매니페스트.
-  copyFile(pluginJson, join(SRC, ".codex-plugin", "plugin.json"));
+  // 1) authored 골격을 out/ 에 그대로 깐다 → README.md + src/.codex-plugin/plugin.json + src/skills/<name>/SKILL.md.
+  copyDir(SKELETON, OUT);
 
-  // 2) SKILL.md(조립 원본).
-  copyFile(skillMd, join(SKILL_DIR, "SKILL.md"));
-
-  // 3) 엔진(mock): lib / ssot / schemas / test → 스킬 아래로 그대로.
+  // 2) 그 위에 공유 코드 overlay — 엔진(mock): lib / ssot / schemas / test.
   copyDir(join(MOCK, "lib"), join(SKILL_DIR, "lib"));
   copyDir(join(MOCK, "ssot"), join(SKILL_DIR, "ssot"));
   copyDir(join(MOCK, "schemas"), join(SKILL_DIR, "schemas"));
   copyDir(join(MOCK, "test"), join(SKILL_DIR, "test")); // test/run.mjs 는 ../lib·../ssot·../schemas 참조 → 그대로 맞음
 
-  // 4) scripts: diff_surface(그대로) + verify_manual/record_depth(import 재작성).
+  // 3) scripts: diff_surface(그대로) + verify_manual/record_depth(import 재작성).
   const scriptsDir = join(SKILL_DIR, "scripts");
   copyFile(join(MOCK, "scripts", "diff_surface.mjs"), join(scriptsDir, "diff_surface.mjs"));
   const rw1 = copyMjsRewritten(
@@ -156,23 +151,21 @@ function main() {
   if (!rw1.rewritten) die("verify_manual.mjs: expected import rewrite but none applied");
   if (!rw2.rewritten) die("record_depth.mjs: expected import rewrite but none applied");
 
-  // 5) 역할 에이전트 md(.claude/agents → agents/).
+  // 4) 역할 에이전트 md(.claude/agents → agents/).
   copyDir(join(RESEARCHER, ".claude", "agents"), join(SKILL_DIR, "agents"), (name, isDir) =>
     isDir ? true : name.endsWith(".md"),
   );
 
-  // 6) 고객사 상태(profile/baseline). out/ 산출·depth-ledger 는 재생성물이라 제외.
+  // 5) 고객사 상태(profile/baseline). out/ 산출·depth-ledger 는 재생성물이라 제외.
   copyDir(join(RESEARCHER, "customers"), join(SKILL_DIR, "customers"), (name, isDir) =>
     isDir ? true : name.endsWith(".json"),
   );
 
-  // 7) README(제출 루트) + logs(무편집 복사, repo 루트 logs/).
-  copyFile(readme, join(OUT, "README.md"));
+  // 6) logs(무편집 복사, repo 루트 logs/).
   const logsSrc = join(REPO_ROOT, "logs");
   let logsCopied = 0;
   if (existsSync(logsSrc)) {
     copyDir(logsSrc, join(OUT, "logs"), (name) => !name.startsWith("."));
-    // 대략 개수(파일만).
     const countFiles = (dir) => {
       let n = 0;
       for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -184,7 +177,7 @@ function main() {
     logsCopied = existsSync(join(OUT, "logs")) ? countFiles(join(OUT, "logs")) : 0;
   }
 
-  // 8) submission.zip (zip CLI 있으면; 없으면 트리만).
+  // 7) submission.zip (zip CLI 있으면; 없으면 트리만).
   let zipStatus = "skipped (no zip CLI)";
   const zipPath = join(OUT, "submission.zip");
   try {
@@ -201,6 +194,7 @@ function main() {
   process.stdout.write(
     JSON.stringify(
       {
+        skeleton: relative(PLUGIN_ROOT, SKELETON),
         staging: relative(PLUGIN_ROOT, SRC),
         skill_dir: relative(PLUGIN_ROOT, SKILL_DIR),
         rewrites: { "verify_manual.mjs": rw1.rewritten, "record_depth.mjs": rw2.rewritten },
