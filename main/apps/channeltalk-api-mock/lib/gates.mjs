@@ -35,11 +35,13 @@ function looksLikeRealToken(token) {
   if (HEX_RE.test(token)) return token.length >= HEX_MIN_LEN;
   // base64 계열: 대문자·소문자·숫자가 최소 2종 이상 섞여야 토큰다움(순수 단어 배제).
   if (!BASE64_RE.test(token)) return false;
+  // 구분자(- _ / + =)는 산문·경로·마크다운 앵커에도 흔하므로 "문자 종류"로 세지 않는다.
+  // [a-z] [A-Z] [0-9] 세 종류 중 2종 이상 섞여야 실토큰으로 본다. 순수 소문자(+구분자)
+  // 식별자·경로·앵커 슬러그(예: --openapiusereventcreate, method/path/auth/params/)는 통과.
   const kinds =
     (/[a-z]/.test(token) ? 1 : 0) +
     (/[A-Z]/.test(token) ? 1 : 0) +
-    (/[0-9]/.test(token) ? 1 : 0) +
-    (/[+/=_-]/.test(token) ? 1 : 0);
+    (/[0-9]/.test(token) ? 1 : 0);
   return kinds >= 2;
 }
 
