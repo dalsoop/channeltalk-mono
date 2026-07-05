@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "plainness verdict — grounded-docs 산출의 쉬움·첫인상 채점",
+  "type": "object",
+  "required": ["score", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "쉬운 말 정도 0~10. 설명 없이 던진 전문용어(maker/checker·pin·게이트·SSOT 등) 남발 0 + 처음 보는 심사자가 한 번에 이해됨 = 10. maximize, >=9.0 이면 통과"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "revise"],
+      "description": "pass = score >= 9.0"
+    },
+    "offenders": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "설명 없는 전문용어·한 번에 이해 안 되는 대목 (예: jargon:SSOT, '3문단 전제 과다')"
+    },
+    "checked": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 무엇을 검토했는지 흔적 (예: '전문용어 후보 8종 스캔', '첫 화면 첫인상 판정', '문단별 이해도 통독'). 비워두지 않는다."
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["where", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "where": { "type": "string", "description": "섹션/문단" },
+          "problem": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}

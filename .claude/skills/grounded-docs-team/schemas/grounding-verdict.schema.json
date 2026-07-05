@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "grounding verdict — grounded-docs 산출의 지어냄 적발",
+  "type": "object",
+  "required": ["count", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "count": {
+      "type": "number",
+      "minimum": 0,
+      "description": "근거(코드·구조·AGENTS.md·대화맥락) 대조 시 근거 없는 지어낸 기능/수치/주장 + 죽은 상대링크 총 개수. minimize, ==0 이면 통과"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "revise"],
+      "description": "pass = count == 0"
+    },
+    "offenders": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "지어낸 항목 식별자 (예: num:99% 향상, link:./nope.md, feat:존재하지 않는 캐시)"
+    },
+    "checked": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 무엇을 근거와 대조했는지 검증 흔적 (예: 'claims 12건 전수 대조', '상대링크 4건 존재 확인', 'AGENTS.md 조항 대조 3건'). 채점을 실제로 수행했다는 근거이므로 비워두지 않는다."
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["where", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "where": { "type": "string", "description": "섹션/문단" },
+          "problem": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "tone-verdict",
+  "description": "docs-tone-reviewer 산출 — 문서 말투(AI 티) 채점. ai-tell-taxonomy.md 기준. S1==0 + tone_score>=8.0 이면 pass.",
+  "type": "object",
+  "required": ["tone_score", "s1_count", "verdict", "offenders"],
+  "additionalProperties": true,
+  "properties": {
+    "tone_score": { "type": "number", "minimum": 0, "maximum": 10, "description": "말투 자연스러움 0~10 (사람 글=10)" },
+    "s1_count": { "type": "integer", "minimum": 0, "description": "S1(결정적) AI 티 위반 수 — pass 하려면 0" },
+    "verdict": { "type": "string", "enum": ["pass", "revise"] },
+    "offenders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cat", "span", "severity", "fix"],
+        "properties": {
+          "cat": { "type": "string", "description": "taxonomy 카테고리 (A~J)" },
+          "span": { "type": "string", "description": "티 나는 원문 구간" },
+          "severity": { "type": "string", "enum": ["S1", "S2", "S3"] },
+          "why": { "type": "string" },
+          "fix": { "type": "string", "description": "자연스러운 처방 (표현만, 내용 불변)" }
+        }
+      }
+    }
+  }
+}

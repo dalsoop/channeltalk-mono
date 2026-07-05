@@ -1,0 +1,16 @@
+{
+  "agent_score": 8.71,
+  "files": [
+    "agents/grounded-docs-writer.md",
+    "agents/docs-grounding-reviewer.md",
+    "agents/docs-plainness-reviewer.md",
+    "agents/docs-structure-count-reviewer.md",
+    "skills/grounded-docs-team/SKILL.md",
+    "skills/grounded-docs-team/schemas/grounding-verdict.schema.json",
+    "skills/grounded-docs-team/schemas/plainness-verdict.schema.json",
+    "skills/grounded-docs-team/schemas/structure-count-verdict.schema.json",
+    "skills/grounded-docs-team/references/grounded-docs-philosophy.md",
+    "skills/grounded-docs-team/workflow/grounded-docs-loop.mjs",
+    "skills/grounded-docs-team/examples/grounded-docs.run.example.yaml"
+  ]
+}

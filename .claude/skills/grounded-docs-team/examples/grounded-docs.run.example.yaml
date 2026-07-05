@@ -1,0 +1,58 @@
+# grounded-docs-team — 실행 바인딩 예시
+# 오케스트레이터(SKILL)가 대상 저장소/앱의 실제 코드 excerpt·디렉터리 구조·AGENTS.md·현재 대화맥락을 모아
+# args.evidence 로 주입하고, 상대링크 후보는 test -e/ls 로 존재를 확인해 args.link_targets 로 넘긴다.
+# 값은 실제 파일/맥락에서 읽는다(하드코딩·지어내기 금지). 없는 정보는 근거 없음.
+
+workflow: skills/grounded-docs-team/workflow/grounded-docs-loop.mjs
+
+args:
+  run: "260706143000-agent-factory"      # out/<run> 슬러그
+  request: "agent-factory 앱 README 를 처음 보는 해커톤 심사자용으로 써줘 (공백 포함 1200자 이내)"
+  doc_type: "readme"                      # readme | doc | form_answer
+  audience: "처음 보는 해커톤 심사자"
+  char_limit: 1200                        # 공백 포함 wc -m 상한 (0=제약 없음)
+  max_rounds: 4
+
+  # 유일한 근거 정본 — 대상 앱의 실제 코드·구조·AGENTS.md·대화맥락 (SKILL 이 파일에서 읽어 채운다)
+  evidence:
+    tree: |
+      apps/agent-factory/
+        .claude/agents/agent-architect.md
+        .claude/agents/agent-inspector.md
+        .claude/skills/agent-factory/SKILL.md
+        .claude/skills/agent-factory/workflow/agent-factory-loop.mjs
+        .claude/skills/agent-factory/references/agent-factory-philosophy.md
+    agents_md: |
+      # apps/agent-factory 는 에이전트를 만드는 에이전트(메타 공장).
+      # 한 줄 요청 → spec → maker→checker 팀 패키지 생성 → 6축 루브릭으로 9/10 될 때까지 재생성.
+    conversation: |
+      사용자: 해커톤 제출용으로 이 공장이 뭘 하는지 심사자가 바로 알게 README 써줘.
+    files:
+      - path: "apps/agent-factory/.claude/skills/agent-factory/SKILL.md"
+        excerpt: |
+          너는 이 공장의 팀 리더(오케스트레이터)다. maker(architect)→checker(inspector) 루프를
+          코드로 돌려 9/10 이 되는 패키지를 출하한다. 게이트 agent_score >= 9.0(단 V>=7).
+      - path: "apps/agent-factory/.claude/skills/agent-factory/workflow/agent-factory-loop.mjs"
+        excerpt: |
+          export async function run({ phase, agent, parallel, log, args }) { ... spec → architect 생성
+          → inspector 6축 채점 → keep-best → 9/10 게이트/조기종료 → 패키지 반환 }
+
+  # test -e / ls 로 실제 존재를 확인한 상대링크만 화이트리스트로 (이 목록 밖 경로를 링크하면 지어냄으로 걸린다)
+  link_targets:
+    - "./.claude/skills/agent-factory/SKILL.md"
+    - "./.claude/skills/agent-factory/references/agent-factory-philosophy.md"
+    - "./.claude/skills/agent-factory/workflow/agent-factory-loop.mjs"
+
+# 기대 결과 (게이트 통과 시):
+#   grounded=0   (근거 밖 기능·수치 지어냄 0, 죽은 상대링크 0 — link_targets 밖 링크 없음)
+#   plain>=9.0   (maker/checker·게이트·SSOT 를 설명 없이 던지지 않음, 심사자가 한 번에 이해)
+#   structure>=8 (작동순서→지식근거→판단·채점기준→막힐 때 4요소 순서대로 뼈대)
+#   overflow=0   (wc -m 실측 <= 1200)
+#
+# 호출 (SKILL 오케스트레이터):
+#   Workflow({ scriptPath: ".../workflow/grounded-docs-loop.mjs", args: <위 args> })
+#   → best.doc.content 를 out/260706143000-agent-factory/README.md 로 쓰고,
+#     결정적 실측:
+#       wc -m out/260706143000-agent-factory/README.md          # <= 1200 확인
+#       for l in ./.claude/skills/agent-factory/SKILL.md ...; do test -e "$l" && echo ok || echo MISSING; done
+#     초과 0 · MISSING 0 이면 출하.

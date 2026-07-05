@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "structure-count verdict — grounded-docs 산출의 절차 뼈대·글자수 채점",
+  "type": "object",
+  "required": ["score", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "절차 4요소(작동순서→지식근거→판단·채점기준→막힐 때)가 순서대로 뼈대를 이루는 정도 0~10. 4요소가 실제 내용을 담고 순서대로면 높음. maximize, >=8.0 이면 통과(글자수와 AND)"
+    },
+    "overflow": {
+      "type": "number",
+      "minimum": 0,
+      "description": "글자수 제약이 있을 때 공백 포함 wc -m 실측값 - 상한. 초과 문자 수. minimize, ==0 이면 통과. 제약 없으면 0(자동 통과)"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "revise"],
+      "description": "pass = score >= 8.0 AND overflow == 0"
+    },
+    "offenders": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "빠진/뒤바뀐 4요소·글자수 초과 지점 (예: 'step:막힐 때 누락', 'order:지식근거가 작동순서보다 먼저', 'overflow:+509자')"
+    },
+    "checked": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 무엇을 검토했는지 흔적 (예: '4요소 존재/순서 확인', 'wc -m 실측 709자 vs 상한 200'). 비워두지 않는다."
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["where", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "where": { "type": "string", "description": "섹션/문단/순서" },
+          "problem": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}
