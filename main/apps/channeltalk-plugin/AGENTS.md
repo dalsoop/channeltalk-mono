@@ -23,11 +23,12 @@ authored 골격  | submission/  (최종 submission 레이아웃 그대로 미러
   ├ 런타임 스킬| submission/src/skills/channeltalk-integration-researcher/SKILL.md  (온보딩→diff→writer→verify 하드게이트→record · ## Commands · ## Boundaries · ## Exit criteria)
   ├ 매니페스트 | submission/src/.codex-plugin/plugin.json   (name·version·skills:./skills/)
   └ README     | submission/README.md            (§10 5문항 + ## 작동 방식 + ## 검증)
-packager       | scripts/build_submission.mjs    (submission/ overlay + import 재작성·logs·zip)
+packager       | scripts/build_submission.mjs    (submission/ overlay + 공유코드/팀스킬 overlay + import 재작성·logs·zip)
+팀 스킬(동봉) | ../channeltalk-integration-researcher/.claude/skills/channeltalk-manual-team/{references,schemas,workflow,SKILL.md} → out/src/skills/channeltalk-manual-team/  (4개 에이전트 md 참조 실체, dangling 0)
 빌드 산출      | out/src/ · out/submission.zip   (gitignore)
 ```
 <!-- END AGENTS-INDEX (managed) -->
 
 ## 검증 (빌드 후 실측)
-`node --check` 조립 .mjs 전부 · plugin.json JSON.parse · SKILL frontmatter+3섹션 · 조립 트리 스모크
-(`diff_surface` new 22 · `verify_manual` approve — 재작성 import 런타임 실증) · zip self-inclusion 0.
+`node --check` 조립 실행 .mjs 전부(workflow 정본 `channeltalk-manual-loop.mjs` 는 top-level return 규약이라 실행 스크립트 아님 — 제외) · plugin.json JSON.parse · SKILL frontmatter+3섹션 · 조립 트리 스모크
+(`test/run.mjs` 9/9 · `verify_manual` approve — 재작성 import 런타임 실증) · **dangling 0 게이트**(4개 에이전트 md 참조 `skills/channeltalk-manual-team/{references,schemas}/…` + 팀 `SKILL.md` 레이아웃 서술 경로가 조립 트리에 전부 실재) · zip self-inclusion 0. 실측 참고: 최근 빌드 = 30파일 · 73,808 bytes.

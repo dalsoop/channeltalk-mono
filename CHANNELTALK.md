@@ -276,21 +276,27 @@ main/apps/
 
 ### 제출 구조 (`channeltalk-plugin/scripts/build_submission.mjs` 로 조립 — 빌드·검증 완료)
 ```
-submission.zip                            ← 24파일, 105KB, self-inclusion 없음
+submission.zip                            ← 30파일, 73,808 bytes(약 72KB), self-inclusion 없음(빌드 실측)
 ├── src/                                  ← 플러그인 루트(전부 src 안)
 │   ├── .codex-plugin/plugin.json         ← 필수 매니페스트
-│   └── skills/channeltalk-integration-researcher/
-│       ├── SKILL.md                      ← 런타임 절차 + ## Commands · ## Boundaries(✅/⚠️/🚫) · ## Exit criteria
-│       ├── lib/{surface,pii,gates,diff}.mjs
-│       ├── scripts/{diff_surface,verify_manual,record_depth}.mjs
-│       ├── ssot/api-surface.json · schemas/*.json
-│       ├── agents/{manual-maker,accuracy,completeness,privacy}.md
-│       ├── test/run.mjs
-│       └── customers/<고객사>/{profile,baseline}.json
+│   └── skills/
+│       ├── channeltalk-integration-researcher/
+│       │   ├── SKILL.md                  ← 런타임 절차 + ## Commands · ## Boundaries(✅/⚠️/🚫) · ## Exit criteria
+│       │   ├── lib/{surface,pii,gates,diff}.mjs
+│       │   ├── scripts/{diff_surface,verify_manual,record_depth}.mjs
+│       │   ├── ssot/api-surface.json · schemas/*.json
+│       │   ├── agents/{manual-maker,accuracy,completeness,privacy}.md
+│       │   ├── test/run.mjs
+│       │   └── customers/<고객사>/{profile,baseline}.json
+│       └── channeltalk-manual-team/      ← 신선 평가 3축 팀(위 agents 4개가 참조 — dangling 0)
+│           ├── SKILL.md                  ← 팀 진입점(오케스트레이터)
+│           ├── references/channeltalk-manual-philosophy.md   ← 철학 정본(루브릭)
+│           ├── schemas/{accuracy,completeness,privacy}-verdict.schema.json  ← 채점 계약 3종
+│           └── workflow/channeltalk-manual-loop.mjs          ← verification-gated 루프
 ├── README.md                             ← 제출 설명 + 질문 5문항 답변 + ## 검증
 └── logs/                                 ← AI 대화 로그(무편집)
 ```
-> 모킹은 **스크립트만**(`.mcp.json` 미사용, 사용자 결정). `verify_manual`·`record_depth`의 `../../channeltalk-api-mock/lib/` import 는 조립 시 `../lib/`로 **재작성**(런타임 실증됨).
+> 모킹은 **스크립트만**(`.mcp.json` 미사용, 사용자 결정). `verify_manual`·`record_depth`의 `../../channeltalk-api-mock/lib/` import 는 조립 시 `../lib/`로 **재작성**(런타임 실증됨). `channeltalk-manual-team` 은 4개 역할 에이전트 md 가 참조하는 팀 스킬로, 참조 경로(`skills/channeltalk-manual-team/{references,schemas}/…`)와 정확히 일치하는 위치로 **동봉**(dangling 0). 팀 루프(라이브 LLM 3축)는 제출물에 동봉만 하고 결정적 게이트 런에선 실행하지 않는다.
 
 ### plugin.json (핵심 필드; 공식 문서 기준)
 ```json
