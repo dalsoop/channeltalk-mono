@@ -14,7 +14,7 @@
 node scripts/diff_surface.mjs --surface ssot/api-surface.json \
   --baseline <baseline.json> --profile <profile.json> [--out <dir>] [--stamp <yymmddhhmmss>]
   # 게이트 FAIL → exit 2. --out 생략 시 out/<stamp>-<customer>/
-node test/run.mjs        # §11 결정적 테스트 9종 (happy·멱등·secret음성·delta·정책·counts·오탐회귀·teeth)
+node test/run.mjs        # §11 결정적 테스트 17종 (harness + cases/{surface,diff,pii,receipt,secret-gate}.mjs)
 ```
 
 ## 인덱스
@@ -26,6 +26,6 @@ node test/run.mjs        # §11 결정적 테스트 9종 (happy·멱등·secret�
 엔진(순수)     | lib/surface.mjs  (load/validate) · lib/pii.mjs (§6 policyFlag) 
               | lib/gates.mjs   (§5.1 4게이트·findSecrets) · lib/diff.mjs (computeChanges)
 CLI           | scripts/diff_surface.mjs         (→ surface.snapshot.json + changes.json)
-테스트        | test/run.mjs                     (§11, 9종)
+테스트        | test/run.mjs (오케스트레이터) · test/harness.mjs · test/cases/*.mjs (§11, 17종)
 ```
 <!-- END AGENTS-INDEX (managed) -->
