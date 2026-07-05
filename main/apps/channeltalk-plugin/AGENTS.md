@@ -19,10 +19,11 @@ node scripts/build_submission.mjs      # → out/src/ 조립 + out/submission.zi
 <!-- BEGIN AGENTS-INDEX (managed) -->
 ```
 [channeltalk-plugin index]|root: .
-런타임 스킬 원본| skill-src/SKILL.md              (온보딩→diff→writer→verify 하드게이트→record · ## Commands · ## Boundaries · ## Exit criteria)
-매니페스트     | plugin-src/.codex-plugin/plugin.json   (name·version·skills:./skills/)
-packager       | scripts/build_submission.mjs    (조립·import 재작성·logs 복사·zip)
-README         | README-src/README.md            (§10 5문항 + ## 검증)
+authored 골격  | submission/  (최종 submission 레이아웃 그대로 미러 — 파편화 없음)
+  ├ 런타임 스킬| submission/src/skills/channeltalk-integration-researcher/SKILL.md  (온보딩→diff→writer→verify 하드게이트→record · ## Commands · ## Boundaries · ## Exit criteria)
+  ├ 매니페스트 | submission/src/.codex-plugin/plugin.json   (name·version·skills:./skills/)
+  └ README     | submission/README.md            (§10 5문항 + ## 작동 방식 + ## 검증)
+packager       | scripts/build_submission.mjs    (submission/ overlay + import 재작성·logs·zip)
 빌드 산출      | out/src/ · out/submission.zip   (gitignore)
 ```
 <!-- END AGENTS-INDEX (managed) -->
