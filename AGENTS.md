@@ -47,8 +47,12 @@ skills = 53~79%. 원리: **retrieval-led > pre-training-led**. 세부는 아래 
   ├ 검증        | CHANNELTALK.md §11            (결정적 테스트 표)
   ├ mock 시드   | CHANNELTALK.md §12·§12-B      (v5 표면 22 features, baseline 시나리오)
   └ 구현규약    | CHANNELTALK.md §13            (위 MUST 원문)
+3앱(빌드됨)     |
+  ├ 모킹·엔진   | main/apps/channeltalk-api-mock/AGENTS.md               (ssot·lib·diff_surface·test)
+  ├ 루프·검증   | main/apps/channeltalk-integration-researcher/AGENTS.md (verify_manual·record_depth·manual-team)
+  └ 조립·제출   | main/apps/channeltalk-plugin/AGENTS.md                 (build_submission → submission.zip)
 루프 재사용     | main/apps/agent-factory/AGENTS.md          (§규약8 근거)
-대상 앱         | main/apps/channeltalk-integration-researcher/AGENTS.md  (구현 대상, §정본 참조)
+제출 빌드       | node main/apps/channeltalk-plugin/scripts/build_submission.mjs   (→ out/submission.zip)
 로그훅          | .claude/settings.json · tools/save_log.py  (Stop·SessionEnd → logs/)
 ```
 <!-- END AGENTS-INDEX (managed) -->

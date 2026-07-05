@@ -7,7 +7,7 @@
 ## 0. 한 줄 정의
 
 한 고객사(사이트)가 **이미 붙여둔 채널톡 연동(baseline)** 을 기준으로, 채널톡 Open API에 **새로 생긴 기능**을
-**개인정보(PII)를 흘리지 않는 방식**의 "이렇게 연동할 수 있다" 매뉴얼로 뽑아 주고, 주기적으로 다시 돌려
+**개인정보(PII)를 유출하지 않는 방식**의 "이렇게 연동할 수 있다" 매뉴얼로 뽑아 주고, 주기적으로 다시 돌려
 **뎁스를 쌓아 가는** maker→checker **에이전트 루프**(리서처/워처). 키 없이 **로컬 모킹**으로 오프라인 실행.
 
 핵심 성격: **정적 카탈로그가 아니라 "신규 기능 감시기"**. 
@@ -230,17 +230,28 @@
 
 ---
 
-## 7. 산출물 구조 (out/)
+## 7. 산출물 구조 (앱별 out/)
+
+개발은 **3앱**(관심사 분리), 제출은 **단일 플러그인**으로 조립(§10). 각 앱이 자기 `out/`을 가진다.
 
 ```
-out/<yymmddhhmmss>-<고객사>/
-├── changes.json            결정적 diff + 게이트 + 프로필 요약
-├── surface.snapshot.json   이 매뉴얼이 대조한 표면 스냅샷
-├── update-manual.md        ← 최종 산출(연동 업데이트 매뉴얼)
-└── run-ledger.json         루프 라운드·점수
-customers/<고객사>/depth-ledger.jsonl   뎁스 누적(런 전반)
+main/apps/
+├── channeltalk-api-mock/            엔진·표면 소유 — ssot/·schemas/·lib/{surface,pii,gates,diff}·scripts/diff_surface·test/run
+│   └── out/                          engine-selftest·surface-report (고정 이름, 결정적)
+├── channeltalk-integration-researcher/   루프·검증·시드 — scripts/{verify_manual,record_depth}·customers/·.claude/{agents,skills}
+│   ├── out/<yymmddhhmmss>-<고객사>/  (런 = 뎁스 1개)
+│   │   ├── surface.snapshot.json     대조한 표면 스냅샷
+│   │   ├── changes.json              결정적 diff + 게이트 + 프로필 요약
+│   │   ├── update-manual.md          ← 최종 산출(연동 업데이트 매뉴얼)
+│   │   ├── manual-verdict.json       결정적/평가 채점
+│   │   └── run-receipt.json          영수증(produced·commands·gates·not_verified·risks)
+│   └── customers/<고객사>/depth-ledger.jsonl   뎁스 누적(런 전반, 추적)
+└── channeltalk-plugin/              조립 대상 — plugin-src·skill-src·README-src·scripts/build_submission
+    └── out/                          src/ 스테이징 · submission.zip (빌드 산출)
 ```
-- `out/`은 재생성 가능(gitignore). `ssot/`·`customers/`는 추적(버전링).
+- **모든 `out/`은 재생성 가능**(gitignore, 슬래시 앞 없어 어느 깊이든 매칭). `ssot/`·`customers/`·소스·`.claude/`는 추적.
+- `in/`·`research/`는 **필요할 때만** 생성(agent-factory 규약) — 디폴트로 안 판다.
+- `--stamp` 주입 시 out 경로·산출 바이트 고정(테스트 재현), 미주입 시 실시계.
 
 ---
 
@@ -263,20 +274,23 @@ customers/<고객사>/depth-ledger.jsonl   뎁스 누적(런 전반)
 
 ## 10. Codex 플러그인 제출물 (AX 해커톤)
 
-### 제출 구조 (필수)
+### 제출 구조 (`channeltalk-plugin/scripts/build_submission.mjs` 로 조립 — 빌드·검증 완료)
 ```
-submission.zip
+submission.zip                            ← 24파일, 105KB, self-inclusion 없음
 ├── src/                                  ← 플러그인 루트(전부 src 안)
 │   ├── .codex-plugin/plugin.json         ← 필수 매니페스트
 │   └── skills/channeltalk-integration-researcher/
-│       ├── SKILL.md                      ← Codex 스킬(절차·트리거)
+│       ├── SKILL.md                      ← 런타임 절차 + ## Commands · ## Boundaries(✅/⚠️/🚫) · ## Exit criteria
+│       ├── lib/{surface,pii,gates,diff}.mjs
 │       ├── scripts/{diff_surface,verify_manual,record_depth}.mjs
-│       ├── references/*.md · schemas/*.json
-│       ├── ssot/api-surface.json
+│       ├── ssot/api-surface.json · schemas/*.json
+│       ├── agents/{manual-maker,accuracy,completeness,privacy}.md
+│       ├── test/run.mjs
 │       └── customers/<고객사>/{profile,baseline}.json
-├── README.md                             ← 제출 설명 + 질문 5문항 답변
+├── README.md                             ← 제출 설명 + 질문 5문항 답변 + ## 검증
 └── logs/                                 ← AI 대화 로그(무편집)
 ```
+> 모킹은 **스크립트만**(`.mcp.json` 미사용, 사용자 결정). `verify_manual`·`record_depth`의 `../../channeltalk-api-mock/lib/` import 는 조립 시 `../lib/`로 **재작성**(런타임 실증됨).
 
 ### plugin.json (핵심 필드; 공식 문서 기준)
 ```json
@@ -303,17 +317,24 @@ submission.zip
 
 ---
 
-## 11. 검증 방법 (결정적)
+## 11. 검증 방법 (결정적) — `channeltalk-api-mock/test/run.mjs` 9종 + 게이트 실측
 
-| 테스트 | 기대 |
-|---|---|
-| happy | baseline vs 표면 → 신규 N, 게이트 전부 PASS(exit 0) |
-| 멱등 | baseline=전체 → 신규 0 |
-| secret 음성 | 예제에 실키 주입 → secret 게이트 FAIL(exit 2) |
-| 신규기능 시뮬 | 표면 +1 → 그 delta 1개만 노출 |
-| verify 음성 | 개인정보 주의 뺀 매뉴얼 → `revise`(누락 id 지목) |
-| 정책 플래그 | `pii_policy=no-transmit` + 전송형 PII → `hold_pii_transmit` |
-| 스킬 구조 | plugin.json·SKILL.md·frontmatter 유효 |
+| 테스트 | 기대 | 상태 |
+|---|---|---|
+| surface_schema_valid | api-surface.json 이 스키마 통과 | ✅ |
+| happy | ranode baseline:[] vs 표면 v4 → 신규 22, 게이트 4/4 PASS(exit 0) | ✅ |
+| 멱등 | baseline=전체 → 신규 0 | ✅ |
+| secret 음성 | 예제에 실키 주입 → secret 게이트 FAIL, offender 지목 | ✅ |
+| 신규기능 시뮬(delta) | 표면 +1 → 그 delta 1개만 노출 | ✅ |
+| 정책 플래그 | `no-transmit` + user.upsert(W+PII) → `hold_pii_transmit`, get(R) → `mask_inbound` | ✅ |
+| counts_shape_ranode | new 22 · new_with_pii 9 · policy_hold 1 · new_inferred 4 (§4.4 계약) | ✅ |
+| **no_false_positive_on_slug** | 식별자·경로·마크다운 앵커(예: `--openapi…`) → secret 오탐 **0** | ✅ (런타임 루프가 잡은 버그 회귀방지) |
+| **teeth_real_token** | 실 base64 키·40자 hex → 여전히 **잡힘** | ✅ |
+
+- **verify 음성**(결정적 checker): 개인정보 주의/누락 id/secret 주입 매뉴얼 → `verify_manual` `revise`(누락 지목, exit 3). ✅
+- **실제 매뉴얼 게이트**: ranode 22기능 `update-manual.md` → `verify_manual` `approve`(missed 0). ✅ 영수증(`run-receipt.json`)에 `not_verified`(inferred 4건) 결정적 도출.
+- **스킬/플러그인 구조**: `plugin.json` JSON.parse, `SKILL.md` frontmatter+3섹션, 조립 트리 `node --check` 8/8, 스모크 diff new 22. ✅
+- **표현 방식**: 위 결과는 손으로 주장하지 않고 러너 출력·게이트 exit·영수증에서 인용(재현: `node test/run.mjs`).
 
 ---
 
