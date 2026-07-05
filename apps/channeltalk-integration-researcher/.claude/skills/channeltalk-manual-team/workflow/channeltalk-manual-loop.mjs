@@ -1,6 +1,7 @@
 // channeltalk-manual-loop — verification-gated maker→checker 루프
 // 입력: out/<run>/changes.json + surface.snapshot.json → 출력: update-manual.md (PII-안전 연동 매뉴얼)
-// 규약: top-level return/await 허용(런타임 async-wrap). Date.now()/Math.random()/fs 금지.
+// 형태: `export async function run(deps)` — **`node --check` 통과**(top-level return 없음). 런타임(Workflow/Codex)이
+//        deps = { phase, agent, parallel, log, args } 를 주입해 호출한다. Date.now()/Math.random()/fs 금지.
 // 정본: skills/channeltalk-manual-team/references/channeltalk-manual-philosophy.md
 //        도메인 SSOT: /Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/main/CHANNELTALK.md 5.2·6·12
 export const meta = {
@@ -9,6 +10,8 @@ export const meta = {
   phases: [{ title: 'Draft' }, { title: 'Gate' }],
 }
 
+// 런타임이 주입하는 deps: phase/agent/parallel/log = 오케스트레이션 primitives, args = 호출자 주입 데이터.
+export async function run({ phase, agent, parallel, log, args } = {}) {
 // ── 바인딩 (args override) — 데이터는 호출자가 주입, 하드코딩 아님 ──────
 const CHANGES  = (args && args.changes)  || {}   // out/<run>/changes.json 파싱본
 const SURFACE  = (args && args.surface)  || {}   // out/<run>/surface.snapshot.json 파싱본
@@ -225,3 +228,4 @@ const clean = last.verdict === 'pass'
 // 반환: 호출자(SKILL)가 best.manual.markdown 을 out/<run>/update-manual.md 로 쓰고,
 //        verify_manual.mjs(결정적 checker)로 실측한 뒤 출하. clean=false면 keep-best(비-clean)임을 run-ledger 에 명시.
 return { run: RUN, manual: best.manual, ledger, best_q: best.q, clean, new_ids: newIds }
+}

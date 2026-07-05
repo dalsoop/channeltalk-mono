@@ -1,0 +1,17 @@
+{
+  "count": 0,
+  "verdict": "pass",
+  "offenders": [],
+  "checked": [
+    "PII/정책 필수 대상 8건 확정: openapi.user.get(R,mask_inbound), openapi.user.upsert(W,hold_pii_transmit), openapi.user.event.create(W,pii), openapi.message.list(R,mask_inbound), openapi.manager.list(R,mask_inbound), openapi.manager.get(R,mask_inbound), webhook.message.created(CB,mask_inbound), webhook.user.created(CB,mask_inbound).",
+    "openapi.user.get(R): 개인정보 주의 존재 — 최소 필드 요청·화면 노출 최소화·마스킹, 'policy_flag=mask_inbound → 수신 마스킹' 문구(update-manual.md:63-66). R 방향 정합.",
+    "openapi.user.upsert(W): 쓰기(전송) 방향 — '수집·이용 동의 범위와 위탁/제3자 제공 검토', 'policy_flag=hold_pii_transmit → 도입 보류 권고'(update-manual.md:92-95). W 방향+정책 플래그 정합.",
+    "openapi.user.event.create(W): 쓰기 방향 — property 개인정보 혼입 주의 + '수집·이용 동의 범위와 위탁/제3자 제공 검토'(update-manual.md:150-152). policy_flag 없음, W 정합.",
+    "openapi.message.list(R): 본문 개인정보 혼입 — 최소 범위 요청·마스킹, '수신 마스킹'(update-manual.md:320-323). R 정합.",
+    "openapi.manager.list(R)/openapi.manager.get(R): 상담원 이름·이메일도 개인정보로 명시, 최소 필드·마스킹·'수신 마스킹'(update-manual.md:404-407, 432-435). R 정합.",
+    "webhook.message.created(CB)/webhook.user.created(CB): '서명 검증(x-signature HMAC) 필수, 실패 요청 폐기' + 본문/유입 PII 마스킹 + '수신 마스킹'(update-manual.md:589-593, 653-657). CB 방향 정합.",
+    "예제 secret 누출 0: grep 결과 x-access-key/secret/x-signature 값은 전부 <KEY>·<SECRET>·<SIGNATURE> 플레이스홀더, 24자+ base64/hex 토큰 없음.",
+    "실개인정보 누출 0: 예제 PII는 전부 <PII:name>·<PII:email>·<PII:mobile>·<PII:plainText>·<PII> 플레이스홀더, 실 이메일·전화번호 없음(example.com 은 고객 도메인)."
+  ],
+  "fixes": []
+}

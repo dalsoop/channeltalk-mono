@@ -234,7 +234,7 @@ new_inferred 3). 산출 경로: `skills/channeltalk-integration-researcher/out/<
 
 - `.codex-plugin/plugin.json` — `name`(kebab) + `version` + `description` + `skills:"./skills/"`, `JSON.parse` 유효.
 - `skills/channeltalk-integration-researcher/SKILL.md` — frontmatter `name`+`description` 유효, `## Commands`/`## Boundaries`/`## Exit criteria` 포함.
-- 조립 트리 안에서 `scripts/*.mjs`·`lib/*.mjs`·`test/run.mjs` 전부 `node --check` 통과, import 재작성(`../lib/`)으로 스모크 `verify_manual` approve 재현. **예외**: `skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs` 는 런타임 async-wrap 스크립트(top-level `return`/`phase`·`agent`·`parallel` 글로벌)라 `node --check` 가 `Illegal return statement` 로 "실패"하는 게 정상 — 플레인 node 로 실행하는 파일이 아니라 Workflow/Codex 런타임이 감싼다. 루프의 **산출**은 `verify_manual`(node, exit 0/3) + `cases/manual-verify.mjs`(회귀 4)로 재검증한다.
+- 조립 트리의 **모든 `.mjs` 가 `node --check` 통과**한다(`scripts/*`·`lib/*`·`test/*` + `skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs`). manual-loop 은 `export async function run(deps)` 형태라 문법검사를 깨지 않고 import·호출 가능(런타임이 `deps={phase,agent,parallel,log,args}` 주입). import 재작성(`../lib/`)으로 스모크 `verify_manual` approve 재현. 루프의 **산출**은 `verify_manual`(node, exit 0/3) + `cases/manual-verify.mjs`(회귀 4) + 실제 실행 로그(`out/<run>/loop-ledger.jsonl`)로 재검증한다.
 - **팀 참조 무결성(dangling 0)** — `agents/channeltalk-*.md` 4개가 참조하는 `skills/channeltalk-manual-team/references/channeltalk-manual-philosophy.md` + `schemas/{accuracy,completeness,privacy}-verdict.schema.json` 이 조립 트리에 **전부 실재**한다(제출물에서 팀 루프가 자족적으로 돌 수 있음).
 
 ---
