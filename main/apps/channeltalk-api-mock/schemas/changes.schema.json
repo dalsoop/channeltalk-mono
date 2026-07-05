@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "channeltalk/changes.schema.json",
+  "title": "out/<run>/changes.json — 결정적 diff 산출(기계 근거)",
+  "type": "object",
+  "required": ["customer", "surface_version", "baseline_version", "profile", "new_features", "removed", "counts", "gates", "gate_offenders"],
+  "additionalProperties": false,
+  "properties": {
+    "customer": { "type": "string" },
+    "surface_version": { "type": "integer", "minimum": 1 },
+    "baseline_version": { "type": "integer", "minimum": 0 },
+    "profile": {
+      "type": "object",
+      "required": ["integration_stage", "pii_policy", "depth"],
+      "additionalProperties": true,
+      "properties": {
+        "integration_stage": { "type": "string" },
+        "primary_intent": { "type": "string" },
+        "monthly_inquiries": { "type": "string" },
+        "pii_policy": { "type": "string", "enum": ["no-transmit", "consent", "transmitting", "undecided"] },
+        "depth": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "new_features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "method", "has_pii", "pii_fields", "provenance", "added_in_version", "dir"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "category": { "type": "string" },
+          "method": { "type": "string" },
+          "path": { "type": "string" },
+          "dir": { "type": "string", "enum": ["R", "W", "CB"] },
+          "has_pii": { "type": "boolean" },
+          "pii_fields": { "type": "array", "items": { "type": "string" } },
+          "provenance": { "type": "string", "enum": ["mock", "inferred"] },
+          "added_in_version": { "type": "integer", "minimum": 1 },
+          "policy_flag": { "type": ["string", "null"], "enum": ["hold_pii_transmit", "mask_inbound", null] }
+        }
+      }
+    },
+    "removed": { "type": "array", "items": { "type": "string" } },
+    "counts": {
+      "type": "object",
+      "required": ["surface", "integrated", "new", "new_with_pii", "policy_hold", "new_inferred"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": { "type": "integer", "minimum": 0 },
+        "integrated": { "type": "integer", "minimum": 0 },
+        "new": { "type": "integer", "minimum": 0 },
+        "new_with_pii": { "type": "integer", "minimum": 0 },
+        "policy_hold": { "type": "integer", "minimum": 0 },
+        "new_inferred": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["diff_completeness", "no_fabricated_endpoint", "no_secret_in_example", "every_pii_flagged"],
+      "additionalProperties": false,
+      "properties": {
+        "diff_completeness": { "type": "boolean" },
+        "no_fabricated_endpoint": { "type": "boolean" },
+        "no_secret_in_example": { "type": "boolean" },
+        "every_pii_flagged": { "type": "boolean" }
+      }
+    },
+    "gate_offenders": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}
