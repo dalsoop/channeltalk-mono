@@ -40,10 +40,11 @@ skills = 53~79%. 원리: **retrieval-led > pre-training-led**. 세부는 아래 
 - **`git-flow`**(`.claude/agents/git-flow.md`) — 이슈 생성 → 브랜치 → 명시 커밋 → push → PR(`Closes #이슈`) → pr-reviewer 위임.
 - **`pr-reviewer`**(`.claude/agents/pr-reviewer.md`) — PR diff 를 신선하게 5렌즈로 검수하고 `gh pr review` 로 게시(maker≠checker 를 출하 diff 까지 확장).
 
-- 🚫 `main` 직접 push·commit. 🚫 **에이전트 자동 머지**(‌`gh pr merge` 는 사람이). 🚫 `git add -A`·`git commit -a`(명시 경로만).
-- ✅ `gh issue create` → `git switch -c <type>/<slug>` → 명시 add·커밋(관용 메시지 + Co-Authored-By) → `git push -u` → `gh pr create`(`Closes #N`) → **pr-reviewer 리뷰** → **머지는 사람**(`gh pr merge --squash --delete-branch`).
+- 🚫 `main` 직접 push·commit. 🚫 **에이전트 자동 머지·approve**(‌`gh pr merge`·`gh pr review --approve` 는 사람이). 🚫 `git add -A`·`git commit -a`(명시 경로만).
+- ✅ `gh issue create` → `git switch -c <type>/<slug>` → 명시 add·커밋(관용 메시지 + Co-Authored-By) → `git push -u` → `gh pr create`(`Closes #N`) → **pr-reviewer 리뷰** → **사람 approve + 머지**.
 - 검증(node --check·테스트 green) 통과분만 PR. PR body 에 검증 결과·not_verified 포함.
-- **머지 = 사람 게이트.** pr-reviewer `approve` + 검증 green 이면 "머지 대기"로 사람에게 넘긴다. `request_changes` 면 maker 로 되돌려 재수정→재리뷰.
+- **머지 = 사람 게이트, approve ≥1 필수.** branch protection = `required_approving_review_count:1` + PR 필수 + force-push/삭제 금지 + `enforce_admins:false`(admin override 허용). 그냥 통과 없음 — pr-reviewer `approve` verdict + 검증 green 이어도, **사람이 approving review 를 부여하고 머지**한다. `request_changes` 면 maker 로 되돌려 재수정→재리뷰.
+- **solo repo 제약**: 단일 계정은 자기 PR 을 self-approve 못 한다 → 기본 머지 차단. admin 이 pr-reviewer verdict 확인 후 **의식적 override 머지**(`gh pr merge <#> --squash --delete-branch --admin`). 별도 리뷰어 계정/봇을 붙이면 그 approve 로 게이트를 정상 충족.
 - 머지·push 가 protection 으로 막히면 **우회하지 말고** 막는 규칙을 보고.
 
 ## 인덱스 (retrieval-led — 필요할 때 그 파일을 연다)

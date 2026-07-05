@@ -9,7 +9,7 @@ tools: Bash, Read, Grep, Glob
 
 ## 철칙
 - **`main` 직접 push·commit 금지.** 모든 변경은 feature branch 에서. `main` 은 branch protection 으로 직접 push 가 차단돼 있다(우회 시도 금지).
-- **머지는 사람.** `gh pr merge` 를 **네가 실행하지 않는다.** 너는 리뷰까지 마치고 "머지 대기" 상태로 사람에게 넘긴다. (branch protection 이 사람 승인·리뷰를 요구하면 그대로 존중.)
+- **머지는 사람 · approve ≥1 필수.** `gh pr merge`·`gh pr review --approve` 를 **네가 실행하지 않는다.** branch protection 이 approving review ≥1 을 강제하므로 "그냥 통과"는 없다. 너는 리뷰까지 마치고 "머지 대기" 상태로 사람에게 넘긴다.
 - **명시 경로만 커밋.** `git add -A`·`git commit -a` 금지(동시 세션·무관 변경 혼입 방지). 이 작업의 파일만 add.
 - **검증 없는 출하 금지.** 코드 변경이면 관련 `node --check`·테스트가 green 임을 확인한 뒤에만 PR.
 - **정직한 메시지.** 실제 한 일만. 지어내지 않는다.
@@ -28,7 +28,8 @@ tools: Bash, Read, Grep, Glob
 7. **Review (신선 checker 위임)** — **`pr-reviewer` 에이전트**에게 이 PR 검수를 위임한다(‌`.claude/agents/pr-reviewer.md`; 코드를 짠 maker 아닌 새 눈). pr-reviewer 가 diff 를 5렌즈로 보고 `gh pr review` 로 발견을 PR 에 게시한 뒤 verdict 를 낸다.
    - `request_changes` 면 **머지로 넘기지 말고** 그 blocker 를 maker 로 되돌려 재수정 → 다시 6~7 (수렴할 때까지, 가드레일은 호출 루프가 관리).
    - `approve` 면 다음(8)으로.
-8. **머지 = 사람 게이트** — **너는 머지하지 않는다.** PR 을 "리뷰 approve·검증 green — 머지 대기" 상태로 두고, 사람에게 PR URL·리뷰 요약·머지 방법(`gh pr merge <#> --squash --delete-branch`)을 보고한다. 사람이 머지한다.
+8. **머지 = 사람 게이트 (approve ≥1 필수)** — **너는 머지·approve 하지 않는다.** `main` branch protection 이 **approving review ≥1** 을 요구한다(‌`required_approving_review_count=1`). 그냥 통과는 없다. PR 을 "리뷰 approve·검증 green — 머지 대기" 상태로 두고, 사람에게 PR URL·pr-reviewer verdict·머지 방법을 보고한다. **사람(admin)이 approve 를 확인/부여하고 머지한다.**
+   - solo repo(단일 계정)면 작성자가 자기 PR 을 self-approve 할 수 없어 기본 머지가 차단된다 → admin 이 pr-reviewer verdict 를 확인한 뒤 **의식적으로 override 머지**(`gh pr merge <#> --squash --delete-branch --admin`). 별도 리뷰어 계정/봇이 있으면 그쪽 approve 로 게이트를 정상 충족한다.
 
 ## 막힐 때
 - push 충돌이면 rebase(merge 아님)로 정리 후 재시도.
