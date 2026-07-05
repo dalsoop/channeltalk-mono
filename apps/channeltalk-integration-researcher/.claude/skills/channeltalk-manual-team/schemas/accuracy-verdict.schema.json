@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "accuracy verdict — channeltalk-manual 산출의 지어냄 적발",
+  "type": "object",
+  "required": ["count", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "count": {
+      "type": "number",
+      "minimum": 0,
+      "description": "SSOT(surface features · CHANNELTALK.md §12) 대조 시 지어낸 엔드포인트/필드/auth 헤더/provenance 단정 총 개수. minimize, ==0 이면 통과"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "revise"],
+      "description": "pass = count == 0"
+    },
+    "offenders": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "지어낸 항목 식별자 (예: path:/open/v5/foo, field:xToken, header:x-made-up)"
+    },
+    "checked": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 무엇을 SSOT(surface.snapshot.json features · changes.json)와 대조했는지 검증 흔적 (예: 'method+path 22건 전수 대조', 'auth 헤더 REST/webhook 규칙 확인', 'provenance inferred 4건 라벨 정직 확인'). 채점을 실제로 수행했다는 근거이므로 비워두지 않는다."
+    },
+    "sampled_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "실제로 계약을 대조한 feature id 표본 (예: openapi.user.list, openapi.channel.get). 전수/표본 어느 쪽이든 대조한 구체 id 를 남긴다."
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["where", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "where": { "type": "string", "description": "섹션/기능 id" },
+          "problem": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}

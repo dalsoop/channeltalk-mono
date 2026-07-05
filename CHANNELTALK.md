@@ -22,7 +22,7 @@
   - 채널톡은 공개 Open API를 제공하고 **지속적으로 확장**한다(신규 엔드포인트·webhook). 문서는 카테고리로 나뉘어 계속 늘어난다.
   - 연동사(서비스 개발자) 입장에서 **"내 연동 기준으로 무엇이 새로 생겼는가"** 를 알려주는 장치가 없다 → 신기능을 놓치거나 뒤늦게 몰아 확인.
   - 연동은 **고객 개인정보**(이름·이메일·연락처, 상담 메시지 본문)를 다뤄 **개인정보보호법(PIPA)** 상 최소수집·동의·안전조치가 필요한데, 신기능 도입 시 이 관점이 빠지기 쉽다.
-- **쓰는 사람**: 채널톡을 연동해 쓰는 서비스 개발자·PM, 채널톡 파트너/에이전시. (예시 고객사: `www.ranode.net`)
+- **쓰는 사람**: 채널톡을 연동해 쓰는 서비스 개발자·PM, 채널톡 파트너/에이전시. (예시 고객사: `www.example.com`)
 - **쓰는 상황**: "예전에 연동한 뒤로 채널톡 API에 뭐가 새로 생겼지? 개인정보 안 흘리면서 뭘 더 붙일 수 있지?"를 **주기적으로** 점검할 때.
 
 ### 공개 출처 (AI가 확인 가능)
@@ -33,7 +33,7 @@
 - Message 객체 필드(확인됨): `id·chatId·personType·personId·plainText·blocks·files·createdAt` (`plainText` = 사용자 입력 본문 → 개인정보 위험).
 - 개인정보보호법(PIPA) — 공개 법령.
 
-> 주의: 위 경로·헤더·필드는 공개 문서에서 **확인한 사실**이지만, 표면 전체(모든 필드·응답 스키마)는 **재구성한 mock**이며 `provenance`로 신뢰도를 표기한다(§8): 문서로 확인한 것은 `mock`, 형태만 추론한 것(주로 webhook payload)은 `inferred`. 라이브 응답으로 단정하지 않는다.
+> 주의: 표면은 **pin 된 실 OpenAPI 스펙 스냅샷**(공개 `swagger.json@57249a6`, v28.0.3, 163 ops)에 대조·교정한 것이며 `provenance`로 신뢰도를 표기한다(§8): 스펙에 실재(해시 고정)하는 REST 는 `pinned`, 스펙 밖(주로 webhook payload)은 `inferred`. `pinned` 는 스냅샷 일치이지 **라이브 응답으로 확인한 것이 아니다**(verified-live 아님).
 
 ---
 
@@ -41,10 +41,10 @@
 
 1. **온보딩 우선**: 사이트별로 처음엔 **정량 질문**으로 프로필을 잡고, 이미 있으면 **뎁스를 쌓는다**(§3).
 2. **신규 기능 감시**: baseline(과거 연동) ↔ 현재 표면 **diff**. 목표기반 재정렬 없이, "추가된 기능 + 연동법"만. (사용자 결정)
-3. **순수 모킹 = SSOT 대역**: `api-doc.channel.io`를 SSOT로 "선언"하되, 실제 표면은 로컬 mock(`api-surface.json`)이 대역. 오프라인·결정적. 키·라이브 fetch 불필요.
+3. **pin 된 실 스펙 = SSOT 대역**: 표면(`api-surface.json`)은 pin 된 실 OpenAPI 스펙 스냅샷(로컬 `channel-swagger.json`)에 대조·교정한 것. 코어 루프는 오프라인·결정적(로컬 pin 만 읽음). 키 불필요; 공개 swagger 재다운로드는 `refresh_surface.mjs --fetch` online 1회뿐.
 4. **개인정보 우선**: 기계 게이트(예제 secret 차단·PII 필드 플래그) + 프로필 정책 강도 + 감독관 검증. 특히 **우리→채널톡 전송**과 **webhook 본문**.
 5. **maker ≠ checker**: 작성 에이전트와 채점(감독관/검증 스크립트)을 분리. 매 라운드 신선 채점. 지어냄 금지.
-6. **정직한 provenance**: `mock`(문서 기반)·`inferred`(추론). 절대 `verified-live` 로 단정 안 함.
+6. **정직한 provenance**: `pinned`(pin 된 실 스펙 실재·해시 고정)·`inferred`(webhook, 스펙 밖). 절대 `verified-live` 로 단정 안 함(pinned = 스냅샷 일치 ≠ 라이브 호출 확인).
 7. **뎁스 누적 & 마지막 뎁스에서 export**: 각 실행이 하나의 뎁스 레이어. 누적하고, **맨 마지막 뎁스에서** 제출물로 패키징.
 
 ---
@@ -84,14 +84,15 @@
 
 경로 규약: 앱 루트 아래 `ssot/`, `customers/<사이트>/`, `out/<yymmddhhmmss>-<고객사>/`. `in/` 없음.
 
-### 4.1 `ssot/api-surface.json` — 채널톡 API 표면(모킹 SSOT)
-실제 v5 경로·헤더·필드 기반. 전체 시드는 §12. 아래는 한 feature의 계약 형태:
+### 4.1 `ssot/api-surface.json` — 채널톡 API 표면(pin 된 실 스펙 대조 SSOT)
+pin 된 실 OpenAPI 스펙(`ssot/channel-swagger.json`, v28.0.3, 163 ops)에 대조·교정. 전체 시드는 §12. 아래는 한 feature의 계약 형태:
 ```jsonc
 {
   "source": "https://api-doc.channel.io/",   // 선언 SSOT
   "base_url": "https://api.channel.io/open/v5",
-  "provenance_default": "mock",
-  "surface_version": 4,                        // 신기능 추가마다 +1
+  "provenance_default": "pinned",              // pin 된 실 스펙 스냅샷 대조 결과
+  "surface_version": 5,                        // pin 갱신·신기능 추가마다 +1
+  "spec_lock": { "sha256": "57249a6…", "spec_version": "28.0.3", "op_count": 163 }, // pin 참조(provenance-lock.json)
   "features": [
     {
       "id": "openapi.user.get",                // 안정적 식별자(불변). baseline/changes 가 이걸로 추적
@@ -105,7 +106,7 @@
       "example_response": { "user": { "id": "u_1", "name": "<PII:name>", "email": "<PII:email>",
                                        "mobileNumber": "<PII:mobile>", "profile": { "<custom>": "<PII>" } } },
       "value": "채널톡 고객 프로필을 서비스 계정과 매핑",
-      "provenance": "mock",                     // mock | inferred (verified-live 금지)
+      "provenance": "pinned",                   // pinned(스펙 실재·해시고정) | inferred(webhook) — verified-live 금지
       "added_in_version": 1
     }
   ]
@@ -116,7 +117,7 @@
 ### 4.2 `customers/<사이트>/profile.json` — 온보딩 결과(정량)
 ```jsonc
 {
-  "customer": "www.ranode.net",
+  "customer": "www.example.com",
   "onboarded_at": "2026-07-05",
   "integration_stage": "none",            // 4.1 온보딩 Q1
   "primary_intent": "new-feature-watch",  // Q2
@@ -129,7 +130,7 @@
 ### 4.3 `customers/<사이트>/baseline.json` — 이미 연동한 기능
 ```jsonc
 {
-  "customer": "www.ranode.net",
+  "customer": "www.example.com",
   "baseline_version": 1,
   "integrated_at_surface_version": 0,
   "integrated": []          // 미연동이면 빈 배열. diff = 표면 features − integrated
@@ -139,26 +140,27 @@
 ### 4.4 `out/<run>/changes.json` — 결정적 diff 산출(기계 근거)
 ```jsonc
 {
-  "customer": "www.ranode.net",
-  "surface_version": 4, "baseline_version": 1,
+  "customer": "www.example.com",
+  "surface_version": 5, "baseline_version": 1,
   "profile": { "integration_stage": "none", "pii_policy": "no-transmit", "depth": 0 },
-  "new_features": [   // 미연동 → 표면 22개 전부 신규. 아래는 발췌 1건
-    { "id": "openapi.user.upsert", "category": "User", "method": "PUT",
+  "new_features": [   // 미연동 → 표면 21개 전부 신규. 아래는 발췌 1건 (실 스펙 교정: PUT→PATCH)
+    { "id": "openapi.user.upsert", "category": "User", "method": "PATCH",
       "has_pii": true, "pii_fields": ["name","email","mobileNumber","profile"],
-      "provenance": "mock", "added_in_version": 2,
+      "provenance": "pinned", "added_in_version": 2,
       "policy_flag": "hold_pii_transmit" }   // §6: 프로필 정책 기반 플래그
   ],
   "removed": [],            // 연동했는데 표면에서 사라진 id(폐기 감시)
-  "counts": { "surface": 22, "integrated": 0, "new": 22, "new_with_pii": 9, "policy_hold": 1, "new_inferred": 4 },
+  "counts": { "surface": 21, "integrated": 0, "new": 21, "new_with_pii": 8, "policy_hold": 1, "new_inferred": 3 },
   "gates": { "diff_completeness": true, "no_fabricated_endpoint": true,
-             "no_secret_in_example": true, "every_pii_flagged": true },
+             "no_secret_in_example": true, "every_pii_flagged": true,
+             "surface_in_pinned_spec": true },   // 5번째 = pin 된 실 스펙 대조
   "gate_offenders": {}
 }
 ```
 
 ### 4.5 `customers/<사이트>/depth-ledger.jsonl` — 뎁스 누적(append-only)
 ```jsonc
-{ "depth": 1, "stamp": "260705190000", "at": "...", "surface_version": 4, "new": 22, "new_with_pii": 9, "adopted": [] }
+{ "depth": 1, "stamp": "260705190000", "at": "...", "surface_version": 5, "new": 21, "new_with_pii": 8, "adopted": [] }
 ```
 
 ### 4.6 `out/<run>/manual-verdict.json` — 감독관 채점(선택, §5)
@@ -175,19 +177,20 @@
 | 단계 | 종류 | 담당 | 산출 |
 |---|---|---|---|
 | 0. 온보딩(프로필 없을 때만) | 질문 | 오케스트레이터 | `profile.json` + `baseline.json` |
-| 1. 결정적 diff | **기계** | `diff_surface` | `changes.json` + 4 게이트 |
+| 1. 결정적 diff | **기계** | `diff_surface` | `changes.json` + 5 게이트 |
 | 2. 매뉴얼 작성 | 에이전트(maker) | writer | `update-manual.md` |
 | 3. 검증 | **기계**(verify) + 에이전트(감독관) | verify script / supervisor | `revise`/`approve` |
 | 4. 뎁스 기록 | 기계 | `record_depth` | `depth-ledger.jsonl` 추가, `profile.depth`+1 |
 
-### 5.1 결정적 diff 게이트 4개 (에이전트 전에 실행, 하나라도 실패 시 중단)
+### 5.1 결정적 diff 게이트 5개 (에이전트 전에 실행, 하나라도 실패 시 중단)
 1. **diff_completeness** — 표면 = (신규 ∪ 기연동), 누락 없음.
-2. **no_fabricated_endpoint** — changes의 모든 id가 표면에 실재.
+2. **no_fabricated_endpoint** — changes의 모든 id가 표면에 실재(표면 파일 내부 정합성).
 3. **no_secret_in_example** — 예제에 실키·실 secret 없음(24자+ base64/hex 토큰 차단, `<KEY>`/`<SECRET>` 플레이스홀더만).
 4. **every_pii_flagged** — `pii_fields` 있는 신규 기능은 `has_pii:true`.
+5. **surface_in_pinned_spec** — 표면의 비-inferred(pinned) feature 가 pin 된 실 OpenAPI 스펙(`ssot/channel-swagger.json`)의 operation 에 method+path 로 실재(오프라인 대조, 네트워크 0). `no_fabricated_endpoint`(내부 정합성)를 넘어 **현실 대비 검증**. inferred(webhook)는 스펙 밖이라 제외. (정직성: pinned = 스냅샷 일치이지 라이브 호출 확인 아님.)
 
 ### 5.2 매뉴얼 작성 (maker) — 기능마다
-- provenance 배지(mock/inferred; inferred는 "문서 검증 필요")
+- provenance 배지(pinned/inferred; inferred(webhook)는 "문서 검증 필요")
 - 무엇/왜(summary + value)
 - 어떻게: method+path, auth 헤더, params, 예제(플레이스홀더 그대로)
 - **개인정보 주의**(pii_fields 또는 policy_flag 있으면 필수) — §6
@@ -198,7 +201,7 @@
 - **감독관(선택, Claude)**: 정확(SSOT 일치·지어냄 없음)·완전(누락 없음)·개인정보 안전 3축 채점.
 
 ### 5.4 done / 가드레일 / keep-best
-- **done**: diff 게이트 4개 전부 true **그리고** verify(및/또는 감독관) `approve`(누락·PII누락·secret = 0).
+- **done**: diff 게이트 5개 전부 true **그리고** verify(및/또는 감독관) `approve`(누락·PII누락·secret = 0).
 - **가드레일**: 최대 3라운드, 2R 개선 없으면 조기종료.
 - **keep-best**: 최고 점수 매뉴얼 채택(가드레일 도달 시 clean pass 아님을 ledger에 명시).
 
@@ -255,19 +258,20 @@ main/apps/
 
 ---
 
-## 8. 모킹 정책 (SSOT 대역)
+## 8. pin 정책 (pin 된 실 스펙 대조 — SSOT 대역)
 
-- `api-doc.channel.io`는 **SPA + 키 필요**라 라이브 fetch 불안정 → `ssot/api-surface.json`이 **정본 대역**.
-- 각 feature `provenance`: `mock`(공개 문서 기반 재구성) / `inferred`(형태 추론). **verified-live 금지**.
-- **신기능 시뮬레이션**: 채널톡이 API를 추가했다고 가정 → `features[]`에 항목 추가 + `surface_version`+1 + 새 항목 `added_in_version` → 다음 실행이 그 **delta만** 잡는다.
-- 실제 연동 전에는 공개 문서로 표면을 재검증(그때 provenance 갱신).
+- 표면은 손 저작 mock 이 아니라 **pin 된 실 OpenAPI 스펙 스냅샷**에 대조·교정한 것이다. pin 원본 = 공개 `https://api.channel.io/docs/open/swagger.json`(OpenAPI 3.0.1, "Channel Open Api" **v28.0.3**, **163 operation**), sha256 `57249a6…` 로 고정(`ssot/provenance-lock.json`). 로컬 pin 사본은 `ssot/channel-swagger.json`, 대조·교정 결과가 `ssot/api-surface.json`(`surface_version` 5, 21 feature).
+- 각 feature `provenance`: `pinned`(= pin 된 공개 스펙 스냅샷과 method+path 일치, 해시 고정) / `inferred`(webhook — 스펙 밖, 별도 문서). **더는 `mock` 아님.** **`verified-live` 금지** — `pinned` 는 스냅샷 일치이지 **라이브 호출로 확인한 것이 아니다**.
+- **5번째 게이트 `surface_in_pinned_spec`**: 표면의 비-inferred(pinned) feature 가 pin 된 스펙 operation 에 실재하는지 오프라인 대조(로컬 pin 읽음, 네트워크 0). 이 덕에 `no_fabricated_endpoint` 가 "표면 내부 정합성"을 넘어 **현실 대비 검증**까지 한다. inferred(webhook)는 제외.
+- **pin 이 잡은 correctness 교정**(핵심 서사): 실 스펙 대조로 예전 mock 의 가짜 2개가 드러나 교정됨 — (1) `openapi.user.list`(GET /users): 실 API 에 유저 목록 엔드포인트 **부재** → 제거. (2) `openapi.user.upsert`: 실 스펙은 `PUT` 이 아니라 **`PATCH /users/{userId}`** → 교정. 규칙은 `scripts/refresh_surface.mjs` 의 `CORRECTIONS` 에 이유와 함께 결정적으로 박혀 있다.
+- **신기능 반영 / pin 갱신**: 코어 루프(diff/verify/manual/test)는 로컬 pin 만 읽어 **오프라인·결정적**이다(네트워크 0). 공개 swagger 를 실제로 재다운로드·재고정하는 것은 `scripts/refresh_surface.mjs --fetch` **online 1회 스텝**뿐이다. 스펙이 바뀌면 `--fetch` 로 pin·lock 을 갱신하고 표면을 재생성(`surface_version`+1, 새 항목 `added_in_version`) → 다음 실행이 그 **delta만** 잡는다.
 
 ---
 
 ## 9. 주기 감시 / 자동화
 
 - 실행(diff)만 cron/스케줄러로 주기 등록 → 신규가 생기면 알림.
-- 예) `0 9 * * * node <앱>/scripts/diff_surface.mjs --customer ranode.net`
+- 예) `0 9 * * * node <앱>/scripts/diff_surface.mjs --customer example.com`
 - 훅으로 강제 갱신 가능하나 **자동 설치는 하지 않고** 문서로만 안내(사용자 선택).
 
 ---
@@ -317,79 +321,86 @@ submission.zip                            ← 30파일, 73,808 bytes(약 72KB), 
 ### 질문 5문항 (요지)
 1. **무엇/누가/언제**: 채널톡 연동사(개발자·PM)가, baseline 기준 신규 API 기능을 개인정보 주의와 함께 매뉴얼로 받는다.
 2. **왜 이 문제**: 채널톡 Open API는 계속 확장되는데 "내 연동 대비 신규"를 알려주는 장치가 없고, 연동은 PII/PIPA 리스크가 있다(공개 문서·법령 근거).
-3. **어떻게 작동**: 온보딩→결정적 diff(4게이트)→매뉴얼 작성(maker)→결정적 verify(checker)→뎁스 누적.
-4. **AI 활용**: 설계·구현을 AI 대화로(logs), 공개 문서 조사→표면 mock 재구성, maker≠checker 루프 설계, 작성은 AI·채점은 스크립트.
+3. **어떻게 작동**: 온보딩→결정적 diff(**5게이트**, 5번째=pin 된 실 스펙 대조)→매뉴얼 작성(maker)→결정적 verify(checker)→뎁스 누적.
+4. **AI 활용**: 설계·구현을 AI 대화로(logs), 표면은 손 저작 mock→**공개 OpenAPI 스펙 pin·대조로 격상**(그 대조가 mock 가짜 2개 `user.list`·`user.upsert` PUT→PATCH 를 교정), maker≠checker 루프 설계, 작성은 AI·채점은 스크립트.
 5. **검증**: happy/멱등/secret 음성/신기능 delta/verify 음성 결정적 테스트 + 스킬 구조 검증 + 로그·플러그인·답변 정합.
 
 ---
 
-## 11. 검증 방법 (결정적) — `channeltalk-api-mock/test/run.mjs` 9종 + 게이트 실측
+## 11. 검증 방법 (결정적) — `channeltalk-api-mock/test/run.mjs` 25 케이스 + 게이트 실측
+
+`test/run.mjs` + `test/cases/*.mjs` 의 `record(...)` 호출 수와 1:1(**25 케이스, 25/25 통과**). 네트워크·시각 없음 — pin 된 스펙도 로컬 파일로 읽는다.
 
 | 테스트 | 기대 | 상태 |
 |---|---|---|
 | surface_schema_valid | api-surface.json 이 스키마 통과 | ✅ |
-| happy | ranode baseline:[] vs 표면 v4 → 신규 22, 게이트 4/4 PASS(exit 0) | ✅ |
-| 멱등 | baseline=전체 → 신규 0 | ✅ |
-| secret 음성 | 예제에 실키 주입 → secret 게이트 FAIL, offender 지목 | ✅ |
-| 신규기능 시뮬(delta) | 표면 +1 → 그 delta 1개만 노출 | ✅ |
+| happy | example baseline:[] vs 표면 v5 → 신규 21, **5게이트 전부 PASS**(exit 0) | ✅ |
+| 멱등 | baseline=전체 21 → 신규 0 | ✅ |
+| delta(신규 시뮬) | 표면 +1(specOps 생략 → 4게이트 경로) → 그 delta 1개만 노출 | ✅ |
+| counts_shape_example | new 21 · new_with_pii 8 · policy_hold 1 · new_inferred 3 · gate_keys 5개 (§4.4 계약) | ✅ |
+| **surface_in_pinned_spec_true** | 실 diff 배선(specOps 로드): 표면 전량 실 스펙 실재 → 5번째 게이트 true, 5/5 | ✅ |
+| **fabricated_surface_fails_gate5** | 가짜 pinned feature 주입 → `surface_in_pinned_spec` **만** false, 나머지 4게이트 true | ✅ (게이트 현실 대비 이빨) |
 | 정책 플래그 | `no-transmit` + user.upsert(W+PII) → `hold_pii_transmit`, get(R) → `mask_inbound` | ✅ |
-| counts_shape_ranode | new 22 · new_with_pii 9 · policy_hold 1 · new_inferred 4 (§4.4 계약) | ✅ |
+| run_receipt_consistency / build_receipt_derivation | buildReceipt·build_receipt 파생이 changes/verdict/reviews 와 일치 | ✅ |
 | **no_false_positive_on_slug** | 식별자·경로·마크다운 앵커(예: `--openapi…`) → secret 오탐 **0** | ✅ (런타임 루프가 잡은 버그 회귀방지) |
-| **teeth_real_token** | 실 base64 키·40자 hex → 여전히 **잡힘** | ✅ |
+| **secret_gate**(teeth·angle_bypass·known_prefix·hex24·lower/upper40·letterstart·separator_split·pure_digits) | 실토큰 형태는 **잡히되** slug·플레이스홀더·순수숫자 오탐 0 | ✅ |
+| **all_pinned_features_in_spec** | 표면의 pinned feature 전부가 pin 된 스펙 operation 에 실재(offenders 0) | ✅ |
+| **fabricated_feature_fails_spec** | 스펙에 없는 가짜 REST(`GET /nope`) → `surfaceInPinnedSpec` FAIL | ✅ |
+| **spec_lock_and_provenance** | `spec_lock.sha256` == lock, `op_count` 163, tally {pinned:18, inferred:3} | ✅ |
+| **upsert_patch_and_list_absent** | 교정 반영: `user.upsert` = **PATCH** `/users/{userId}`, `user.list` **부재** | ✅ |
 
 - **verify 음성**(결정적 checker): 개인정보 주의/누락 id/secret 주입 매뉴얼 → `verify_manual` `revise`(누락 지목, exit 3). ✅
-- **실제 매뉴얼 게이트**: ranode 22기능 `update-manual.md` → `verify_manual` `approve`(missed 0). ✅ 영수증(`run-receipt.json`)에 `not_verified`(inferred 4건) 결정적 도출.
-- **스킬/플러그인 구조**: `plugin.json` JSON.parse, `SKILL.md` frontmatter+3섹션, 조립 트리 `node --check` 8/8, 스모크 diff new 22. ✅
+- **실제 매뉴얼 게이트**: example 21기능 `update-manual.md` → `verify_manual` `approve`(missed 0). ✅ 영수증(`run-receipt.json`)에 `not_verified`(inferred webhook 3건) 결정적 도출. 성숙 연동사 `mature-site`(baseline 7) 런은 delta **14**, 동일하게 5/5·approve·clean.
+- **스킬/플러그인 구조**: `plugin.json` JSON.parse, `SKILL.md` frontmatter+3섹션, 조립 트리 `node --check` 통과, 스모크 diff new 21. ✅
 - **표현 방식**: 위 결과는 손으로 주장하지 않고 러너 출력·게이트 exit·영수증에서 인용(재현: `node test/run.mjs`).
 
 ---
 
-## 12. 부록 A — 현실적 mock 표면 시드 (실제 채널톡 Open API v5 기반)
+## 12. 부록 A — pin 된 실 표면 시드 (pin 된 채널톡 Open API 스펙 v28.0.3 기반)
 
-실제 문서에서 확인한 경로·헤더·필드로 구성한 `ssot/api-surface.json` 시드. `surface_version: 4`, 22 features.
-방향(dir): R=읽기(채널톡→우리) · W=쓰기(우리→채널톡) · CB=webhook 콜백(채널톡→우리). prov: 문서확인=mock, 추론=inferred.
+pin 된 실 OpenAPI 스펙(`ssot/channel-swagger.json`, "Channel Open Api" v28.0.3, 163 ops, sha256 `57249a6…`)에 대조·교정한 `ssot/api-surface.json` 시드. `surface_version: 5`, **21 features**(18 pinned + 3 inferred webhook).
+방향(dir): R=읽기(채널톡→우리) · W=쓰기(우리→채널톡) · CB=webhook 콜백(채널톡→우리). prov: 스펙 실재·해시고정=pinned, webhook(스펙 밖)=inferred. (교정: 예전 mock 의 `openapi.user.list`(GET /users)는 실 스펙에 없어 **제거**, `openapi.user.upsert` 는 PUT→**PATCH** 로 교정.)
 
 | id | cat | method · path | v | pii_fields | dir | prov |
 |---|---|---|---|---|---|---|
-| openapi.user.list | User | GET /users | 1 | name,email,mobileNumber | R | mock |
-| openapi.user.get | User | GET /users/{userId} | 1 | name,email,mobileNumber,avatarUrl,profile | R | mock |
-| openapi.user.upsert | User | PUT /users/{userId} | 2 | name,email,mobileNumber,profile | **W** | mock |
-| openapi.user.delete | User | DELETE /users/{userId} | 2 | — | W | mock |
-| openapi.user.event.create | Event | POST /users/{userId}/events | 3 | property | W | mock |
-| openapi.userchat.list | UserChat | GET /user-chats | 1 | — | R | mock |
-| openapi.userchat.get | UserChat | GET /user-chats/{userChatId} | 1 | — | R | mock |
-| openapi.user.userchats.list | UserChat | GET /users/{userId}/user-chats | 1 | — | R | mock |
-| openapi.user.userchats.create | UserChat | POST /users/{userId}/user-chats | 2 | — | W | mock |
-| openapi.userchat.sessions.list | UserChat | GET /user-chats/{userChatId}/sessions | 2 | — | R | mock |
-| openapi.message.list | Message | GET /user-chats/{userChatId}/messages | 1 | plainText,files | R | mock |
-| openapi.message.send | Message | POST /user-chats/{userChatId}/messages | 1 | — | W | mock |
-| openapi.group.message.send | Message | POST /groups/{groupId}/messages | 2 | — | W | mock |
-| openapi.manager.list | Manager | GET /managers | 1 | name,email | R | mock |
-| openapi.manager.get | Manager | GET /managers/{managerId} | 2 | name,email | R | mock |
-| openapi.group.list | Group | GET /groups | 2 | — | R | mock |
-| openapi.bot.create | Bot | POST /bots | 3 | — | W | mock |
-| openapi.bot.list | Bot | GET /bots | 3 | — | R | mock |
-| openapi.channel.get | Channel | GET /channel | 2 | — | R | inferred |
+| openapi.user.get | User | GET /users/{userId} | 1 | name,email,mobileNumber,avatarUrl,profile | R | pinned |
+| openapi.user.upsert | User | **PATCH** /users/{userId} | 2 | name,email,mobileNumber,profile | **W** | pinned |
+| openapi.user.delete | User | DELETE /users/{userId} | 2 | — | W | pinned |
+| openapi.user.event.create | Event | POST /users/{userId}/events | 3 | property | W | pinned |
+| openapi.userchat.list | UserChat | GET /user-chats | 1 | — | R | pinned |
+| openapi.userchat.get | UserChat | GET /user-chats/{userChatId} | 1 | — | R | pinned |
+| openapi.user.userchats.list | UserChat | GET /users/{userId}/user-chats | 1 | — | R | pinned |
+| openapi.user.userchats.create | UserChat | POST /users/{userId}/user-chats | 2 | — | W | pinned |
+| openapi.userchat.sessions.list | UserChat | GET /user-chats/{userChatId}/sessions | 2 | — | R | pinned |
+| openapi.message.list | Message | GET /user-chats/{userChatId}/messages | 1 | plainText,files | R | pinned |
+| openapi.message.send | Message | POST /user-chats/{userChatId}/messages | 1 | — | W | pinned |
+| openapi.group.message.send | Message | POST /groups/{groupId}/messages | 2 | — | W | pinned |
+| openapi.manager.list | Manager | GET /managers | 1 | name,email | R | pinned |
+| openapi.manager.get | Manager | GET /managers/{managerId} | 2 | name,email | R | pinned |
+| openapi.group.list | Group | GET /groups | 2 | — | R | pinned |
+| openapi.bot.create | Bot | POST /bots | 3 | — | W | pinned |
+| openapi.bot.list | Bot | GET /bots | 3 | — | R | pinned |
+| openapi.channel.get | Channel | GET /channel | 2 | — | R | pinned |
 | webhook.message.created | Webhook | POST (콜백) | 3 | entity.plainText | CB | inferred |
 | webhook.userchat.opened | Webhook | POST (콜백) | 3 | — | CB | inferred |
 | webhook.user.created | Webhook | POST (콜백) | 4 | entity.name,entity.email,entity.mobileNumber | CB | inferred |
 
 경로는 모두 `base_url = https://api.channel.io/open/v5` 상대. REST auth = `x-access-key`+`x-access-secret`, webhook = `x-signature (HMAC)`.
-버전 스토리(신기능 진화): v1 = 코어 8개(조회·상담·메시지·매니저) · v2 = 확장 8개(쓰기·세션·그룹·채널) · v3 = 자동화 5개(이벤트·봇·webhook) · v4 = 신규 1개(user.created webhook).
+버전 스토리(신기능 진화): v1 = 코어 7개(조회·상담·메시지·매니저) · v2 = 확장 8개(쓰기·세션·그룹·채널) · v3 = 자동화 5개(이벤트·봇·webhook) · v4 = 신규 1개(user.created webhook). (v1 이 8→7 로 준 것은 실 스펙에 없는 `user.list` 를 제거했기 때문.)
 
 대표 feature 계약(발췌):
 ```jsonc
-// PII 전송(W) — 미연동 ranode 의 no-transmit 정책에서 hold_pii_transmit
-{ "id": "openapi.user.upsert", "category": "User", "method": "PUT", "path": "/open/v5/users/{userId}",
+// PII 전송(W) — 미연동 example 의 no-transmit 정책에서 hold_pii_transmit. 실 스펙은 PATCH(PUT 아님 — pin 이 교정).
+{ "id": "openapi.user.upsert", "category": "User", "method": "PATCH", "path": "/open/v5/users/{userId}",
   "auth": ["x-access-key","x-access-secret"], "pii_fields": ["name","email","mobileNumber","profile"],
-  "example_request": "PUT /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"profile\":{\"name\":\"<PII:name>\",\"email\":\"<PII:email>\"}}",
+  "example_request": "PATCH /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"profile\":{\"name\":\"<PII:name>\",\"email\":\"<PII:email>\"}}",
   "value": "회원정보를 상담원이 보게 동기화(단, 개인정보 외부 전송 — 동의·위탁 검토)",
-  "provenance": "mock", "added_in_version": 2 }
+  "provenance": "pinned", "added_in_version": 2 }
 // 상담 본문 수신(R) — plainText 는 사용자 입력 → 마스킹
 { "id": "openapi.message.list", "category": "Message", "method": "GET",
   "path": "/open/v5/user-chats/{userChatId}/messages", "pii_fields": ["plainText","files"],
   "params": [{"name":"limit","in":"query","required":false},{"name":"since","in":"query","required":false}],
-  "provenance": "mock", "added_in_version": 1 }
+  "provenance": "pinned", "added_in_version": 1 }
 // webhook 신규(CB, inferred) — 유저 생성 콜백에 PII 유입
 { "id": "webhook.user.created", "category": "Webhook", "method": "POST", "path": "(구독자 콜백 URL)",
   "event": "user.created", "auth": ["x-signature (HMAC)"],
@@ -400,21 +411,22 @@ submission.zip                            ← 30파일, 73,808 bytes(약 72KB), 
 
 ## 12-B. 부록 B — 두 baseline 시나리오 (diff 현실성)
 
-같은 표면(v4, 22개)에 baseline만 달리해 "신규 기능 감시"를 보여준다.
+같은 표면(v5, 21개)에 baseline만 달리해 "신규 기능 감시"를 보여준다.
 
-**(a) `www.ranode.net` — 온보딩 미연동** (`integrated: []`)
+**(a) `www.example.com` — 온보딩 미연동** (`integrated: []`)
 - 온보딩 응답: 미연동 · 신규기능 감시 · 월 1k~10k · 개인정보 **전송 불가(최소화)**.
-- 첫 실행 = **전체 22개 카탈로그**. 정책 적용:
+- 첫 실행 = **전체 21개 카탈로그**(new 21 · new_with_pii 8 · policy_hold 1 · new_inferred 3). 정책 적용:
   - `hold_pii_transmit`(도입 보류): `openapi.user.upsert`(W+PII).
-  - `mask_inbound`(수신 마스킹): `user.list`·`user.get`·`message.list`·`manager.list`·`manager.get`·`webhook.user.created`.
+  - `mask_inbound`(수신 마스킹): `user.get`·`message.list`·`manager.list`·`manager.get`·`webhook.message.created`·`webhook.user.created`.
   - `user.event.create` 는 `property` 에 PII 섞임 가능 → 이벤트 속성에서 개인정보 제외 권고.
 
-**(b) 성숙 연동사 — v1 코어만 연동** (`integrated: [v1 8개]`)
-- diff = **v2~v4 신규 14개만**. 이게 진짜 "이런 기능이 추가로 나왔다":
+**(b) 성숙 연동사 `mature-site` — 코어만 연동** (`integrated: [7개]`)
+- baseline 7개: user.get·userchat.list·userchat.get·user.userchats.list·message.list·message.send·manager.list.
+- diff = **신규 14개만**(21 − 7). 이게 진짜 "이런 기능이 추가로 나왔다"(new 14 · new_with_pii 5 · new_inferred 3):
   - v2(8): user.upsert·user.delete·user.userchats.create·userchat.sessions.list·group.message.send·manager.get·group.list·channel.get
   - v3(5): user.event.create·bot.create·bot.list·webhook.message.created·webhook.userchat.opened
   - v4(1): webhook.user.created
-- 이후 고객사가 `bot.create` 를 실제로 붙이면 `record_depth --adopt openapi.bot.create` → 다음 뎁스부터 빠지고, 표면이 v5로 오르면 그 delta만 새로 뜬다.
+- 이후 고객사가 `bot.create` 를 실제로 붙이면 `record_depth --adopt openapi.bot.create` → 다음 뎁스부터 빠지고, 표면이 새 pin 으로 오르면 그 delta만 새로 뜬다.
 
 ---
 
@@ -430,7 +442,7 @@ submission.zip                            ← 30파일, 73,808 bytes(약 72KB), 
 
 4. **에이전트 루프는 "직접 돌리지 말고 시켜서" 구성.** 오케스트레이터가 매뉴얼을 손으로 쓰지 않는다. **maker→checker 팀을 구성해 루프를 위임**한다(작성=maker 에이전트, 채점=checker/평가 에이전트). 오케스트레이터는 라운드·점수만 중계하고, 실제 생성·채점은 팀이 한다. → 규칙 8·9와 연결.
 
-5. **lint · 모킹을 제대로 처리.** 모든 스크립트는 `node --check` 통과 + 스키마는 `JSON.parse` 검증. 모킹은 §8 정책대로 `ssot/api-surface.json`이 라이브 fetch 대역이며 **오프라인·결정적**이어야 한다(네트워크 호출·실키 의존 금지). `provenance`(mock/inferred)를 반드시 표기하고 `verified-live`로 단정하지 않는다. secret 게이트가 실키 토큰을 차단하는지 lint에 포함.
+5. **lint · pin 을 제대로 처리.** 모든 스크립트는 `node --check` 통과 + 스키마는 `JSON.parse` 검증. §8 정책대로 표면은 **pin 된 실 스펙 스냅샷**(로컬 `ssot/channel-swagger.json`)에 대조한 것이며 코어 루프는 **오프라인·결정적**이어야 한다(네트워크 호출·실키 의존 금지; 공개 swagger 재다운로드는 `refresh_surface.mjs --fetch` online 1회뿐). `provenance`(pinned/inferred)를 반드시 표기하고 `verified-live`로 단정하지 않는다. secret 게이트가 실키 토큰을 차단하는지 lint에 포함.
 
 6. **평가(checker) 에이전트를 별도로 추가.** maker와 분리된 **신선 평가 에이전트**를 두어 §5.3의 3축(정확·완전·개인정보 안전)으로 채점하고 게이트한다. 평가 에이전트는 매 라운드 새 눈으로 채점하고, 자기 작성물을 자기가 채점하지 않는다(maker≠checker). 결정적 verify(스크립트)와 의미 채점(에이전트)을 함께 건다.
 

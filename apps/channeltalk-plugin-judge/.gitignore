@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Run outputs (심사 리포트 — 재생성 가능)
+out/
+
+# Locks / transient
+*.lock
+scheduled_tasks.lock

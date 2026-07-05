@@ -1,0 +1,690 @@
+{
+  "source": "https://api-doc.channel.io/",
+  "base_url": "https://api.channel.io/open/v5",
+  "provenance_default": "pinned",
+  "surface_version": 5,
+  "note": "pinned from published swagger.json@57249a6 (Channel Open Api v28.0.3); pinned=공개 스펙 스냅샷 일치(해시 고정), 라이브 호출 확인 아님. webhook=inferred(스펙 밖).",
+  "spec_lock": {
+    "sha256": "57249a6cd3bb7ed96047011c70366b08aa2ae94e6bb73feb381a763fc079f1a4",
+    "spec_version": "28.0.3",
+    "op_count": 163
+  },
+  "features": [
+    {
+      "id": "openapi.user.get",
+      "category": "User",
+      "method": "GET",
+      "path": "/open/v5/users/{userId}",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "단일 유저(고객) 조회",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [
+        "name",
+        "email",
+        "mobileNumber",
+        "avatarUrl",
+        "profile"
+      ],
+      "dir": "R",
+      "example_request": "GET /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "user": {
+          "id": "u_1",
+          "name": "<PII:name>",
+          "email": "<PII:email>",
+          "mobileNumber": "<PII:mobile>",
+          "profile": {
+            "<custom>": "<PII>"
+          }
+        }
+      },
+      "value": "채널톡 고객 프로필을 서비스 계정과 매핑",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.user.upsert",
+      "category": "User",
+      "method": "PATCH",
+      "path": "/open/v5/users/{userId}",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "유저 프로필 생성·갱신",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [
+        "name",
+        "email",
+        "mobileNumber",
+        "profile"
+      ],
+      "dir": "W",
+      "example_request": "PATCH /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"profile\":{\"name\":\"<PII:name>\",\"email\":\"<PII:email>\"}}",
+      "example_response": {
+        "user": {
+          "id": "u_1",
+          "name": "<PII:name>",
+          "email": "<PII:email>"
+        }
+      },
+      "value": "회원정보를 상담원이 보게 동기화(단, 개인정보 외부 전송 — 동의·위탁 검토)",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.user.delete",
+      "category": "User",
+      "method": "DELETE",
+      "path": "/open/v5/users/{userId}",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "유저 삭제",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "W",
+      "example_request": "DELETE /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "deleted": true
+      },
+      "value": "탈퇴 회원의 채널톡 프로필 정리(보관기간·파기 정책 연계)",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.user.event.create",
+      "category": "Event",
+      "method": "POST",
+      "path": "/open/v5/users/{userId}/events",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "유저 이벤트 기록",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [
+        "property"
+      ],
+      "dir": "W",
+      "example_request": "POST /open/v5/users/{userId}/events\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"name\":\"<event>\",\"property\":{\"<key>\":\"<value>\"}}",
+      "example_response": {
+        "event": {
+          "id": "ev_1",
+          "name": "<event>"
+        }
+      },
+      "value": "행동 이벤트로 세그먼트·자동화 트리거(속성에 개인정보 혼입 주의)",
+      "provenance": "pinned",
+      "added_in_version": 3
+    },
+    {
+      "id": "openapi.userchat.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "상담(유저챗) 목록 조회",
+      "params": [
+        {
+          "name": "state",
+          "in": "query",
+          "required": false
+        },
+        {
+          "name": "sortOrder",
+          "in": "query",
+          "required": false
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/user-chats?state=opened&limit=100\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "userChats": [
+          {
+            "id": "uc_1",
+            "state": "opened"
+          }
+        ]
+      },
+      "value": "진행 중/종료 상담 목록을 내부 대시보드에 집계",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.userchat.get",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "단일 상담(유저챗) 조회",
+      "params": [
+        {
+          "name": "userChatId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/user-chats/{userChatId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "userChat": {
+          "id": "uc_1",
+          "state": "opened"
+        }
+      },
+      "value": "특정 상담의 상태·메타를 내부 로직에서 참조",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.user.userchats.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/users/{userId}/user-chats",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "유저별 상담 목록 조회",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/users/{userId}/user-chats\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "userChats": [
+          {
+            "id": "uc_1",
+            "state": "closed"
+          }
+        ]
+      },
+      "value": "한 고객의 상담 이력을 서비스 화면에 연결",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.user.userchats.create",
+      "category": "UserChat",
+      "method": "POST",
+      "path": "/open/v5/users/{userId}/user-chats",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "유저 대상 상담 생성",
+      "params": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "W",
+      "example_request": "POST /open/v5/users/{userId}/user-chats\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "userChat": {
+          "id": "uc_2",
+          "state": "opened"
+        }
+      },
+      "value": "서비스 이벤트에서 능동적으로 상담 세션을 연다",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.userchat.sessions.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}/sessions",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "상담 세션 목록 조회",
+      "params": [
+        {
+          "name": "userChatId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/user-chats/{userChatId}/sessions\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "sessions": [
+          {
+            "id": "s_1",
+            "personType": "user"
+          }
+        ]
+      },
+      "value": "상담 참여 세션(읽음·참여 상태)을 추적",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.message.list",
+      "category": "Message",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}/messages",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "상담 메시지 목록 조회",
+      "params": [
+        {
+          "name": "userChatId",
+          "in": "path",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false
+        },
+        {
+          "name": "since",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "pii_fields": [
+        "plainText",
+        "files"
+      ],
+      "dir": "R",
+      "example_request": "GET /open/v5/user-chats/{userChatId}/messages?limit=100\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "messages": [
+          {
+            "id": "m_1",
+            "chatId": "uc_1",
+            "personType": "user",
+            "plainText": "<PII:plainText>",
+            "files": []
+          }
+        ]
+      },
+      "value": "상담 본문을 내부 분석/CS에 연동(본문에 개인정보 혼입 — 마스킹)",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.message.send",
+      "category": "Message",
+      "method": "POST",
+      "path": "/open/v5/user-chats/{userChatId}/messages",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "상담에 메시지 발신",
+      "params": [
+        {
+          "name": "userChatId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "W",
+      "example_request": "POST /open/v5/user-chats/{userChatId}/messages\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"blocks\":[{\"type\":\"text\",\"value\":\"<message>\"}]}",
+      "example_response": {
+        "message": {
+          "id": "m_2",
+          "chatId": "uc_1"
+        }
+      },
+      "value": "서비스 로직에서 상담에 자동 응답 발신(본문에 개인정보 넣지 않음)",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.group.message.send",
+      "category": "Message",
+      "method": "POST",
+      "path": "/open/v5/groups/{groupId}/messages",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "그룹에 메시지 발신",
+      "params": [
+        {
+          "name": "groupId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [],
+      "dir": "W",
+      "example_request": "POST /open/v5/groups/{groupId}/messages\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"blocks\":[{\"type\":\"text\",\"value\":\"<message>\"}]}",
+      "example_response": {
+        "message": {
+          "id": "gm_1",
+          "groupId": "g_1"
+        }
+      },
+      "value": "팀 그룹 채널에 내부 알림·운영 메시지 발신",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.manager.list",
+      "category": "Manager",
+      "method": "GET",
+      "path": "/open/v5/managers",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "매니저(상담원) 목록 조회",
+      "params": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "pii_fields": [
+        "name",
+        "email"
+      ],
+      "dir": "R",
+      "example_request": "GET /open/v5/managers\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "managers": [
+          {
+            "id": "mgr_1",
+            "name": "<PII:name>",
+            "email": "<PII:email>"
+          }
+        ]
+      },
+      "value": "상담원 목록을 내부 배정 로직에 연동(상담원 이름·이메일도 개인정보)",
+      "provenance": "pinned",
+      "added_in_version": 1
+    },
+    {
+      "id": "openapi.manager.get",
+      "category": "Manager",
+      "method": "GET",
+      "path": "/open/v5/managers/{managerId}",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "단일 매니저(상담원) 조회",
+      "params": [
+        {
+          "name": "managerId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "pii_fields": [
+        "name",
+        "email"
+      ],
+      "dir": "R",
+      "example_request": "GET /open/v5/managers/{managerId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "manager": {
+          "id": "mgr_1",
+          "name": "<PII:name>",
+          "email": "<PII:email>"
+        }
+      },
+      "value": "특정 상담원 정보를 서비스 화면에 표시(개인정보 최소 노출)",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.group.list",
+      "category": "Group",
+      "method": "GET",
+      "path": "/open/v5/groups",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "그룹 목록 조회",
+      "params": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/groups\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "groups": [
+          {
+            "id": "g_1",
+            "name": "<group>"
+          }
+        ]
+      },
+      "value": "팀 그룹 구조를 내부 라우팅에 연동",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "openapi.bot.create",
+      "category": "Bot",
+      "method": "POST",
+      "path": "/open/v5/bots",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "봇 생성",
+      "params": [],
+      "pii_fields": [],
+      "dir": "W",
+      "example_request": "POST /open/v5/bots\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"name\":\"<bot>\"}",
+      "example_response": {
+        "bot": {
+          "id": "b_1",
+          "name": "<bot>"
+        }
+      },
+      "value": "자동화 봇을 프로그램적으로 프로비저닝",
+      "provenance": "pinned",
+      "added_in_version": 3
+    },
+    {
+      "id": "openapi.bot.list",
+      "category": "Bot",
+      "method": "GET",
+      "path": "/open/v5/bots",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "봇 목록 조회",
+      "params": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/bots\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "bots": [
+          {
+            "id": "b_1",
+            "name": "<bot>"
+          }
+        ]
+      },
+      "value": "등록된 봇 목록을 운영 콘솔에 표시",
+      "provenance": "pinned",
+      "added_in_version": 3
+    },
+    {
+      "id": "openapi.channel.get",
+      "category": "Channel",
+      "method": "GET",
+      "path": "/open/v5/channel",
+      "auth": [
+        "x-access-key",
+        "x-access-secret"
+      ],
+      "summary": "채널(워크스페이스) 정보 조회",
+      "params": [],
+      "pii_fields": [],
+      "dir": "R",
+      "example_request": "GET /open/v5/channel\nx-access-key: <KEY>\nx-access-secret: <SECRET>",
+      "example_response": {
+        "channel": {
+          "id": "c_1",
+          "name": "<channel>"
+        }
+      },
+      "value": "채널 메타(플랜·설정)를 내부 표시에 활용",
+      "provenance": "pinned",
+      "added_in_version": 2
+    },
+    {
+      "id": "webhook.message.created",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "event": "message.created",
+      "auth": [
+        "x-signature (HMAC)"
+      ],
+      "summary": "메시지 생성 webhook 콜백",
+      "params": [],
+      "pii_fields": [
+        "entity.plainText"
+      ],
+      "dir": "CB",
+      "example_request": "POST <구독자 콜백 URL>\nx-signature: <SIGNATURE>\n{\"type\":\"message\",\"entity\":{...}}",
+      "example_response": {
+        "type": "message",
+        "entity": {
+          "id": "m_1",
+          "chatId": "uc_1",
+          "plainText": "<PII:plainText>"
+        }
+      },
+      "value": "상담 메시지 발생을 실시간 수신(서명 검증 필수, 본문 마스킹)",
+      "provenance": "inferred",
+      "added_in_version": 3
+    },
+    {
+      "id": "webhook.userchat.opened",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "event": "userChat.opened",
+      "auth": [
+        "x-signature (HMAC)"
+      ],
+      "summary": "상담 오픈 webhook 콜백",
+      "params": [],
+      "pii_fields": [],
+      "dir": "CB",
+      "example_request": "POST <구독자 콜백 URL>\nx-signature: <SIGNATURE>\n{\"type\":\"userChat\",\"entity\":{...}}",
+      "example_response": {
+        "type": "userChat",
+        "entity": {
+          "id": "uc_1",
+          "state": "opened"
+        }
+      },
+      "value": "상담 시작 이벤트를 실시간 수신해 내부 워크플로 트리거(서명 검증 필수)",
+      "provenance": "inferred",
+      "added_in_version": 3
+    },
+    {
+      "id": "webhook.user.created",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "event": "user.created",
+      "auth": [
+        "x-signature (HMAC)"
+      ],
+      "summary": "유저 생성 webhook 콜백",
+      "params": [],
+      "pii_fields": [
+        "entity.name",
+        "entity.email",
+        "entity.mobileNumber"
+      ],
+      "dir": "CB",
+      "example_request": "POST <구독자 콜백 URL>\nx-signature: <SIGNATURE>\n{\"type\":\"user\",\"entity\":{...}}",
+      "example_response": {
+        "type": "user",
+        "entity": {
+          "id": "u_1",
+          "name": "<PII:name>",
+          "email": "<PII:email>",
+          "mobileNumber": "<PII:mobile>"
+        }
+      },
+      "value": "신규 고객 생성을 실시간 수신(서명 검증 필수, 유입 PII 마스킹)",
+      "provenance": "inferred",
+      "added_in_version": 4
+    }
+  ]
+}

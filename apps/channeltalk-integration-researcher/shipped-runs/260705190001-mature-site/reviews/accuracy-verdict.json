@@ -1,0 +1,30 @@
+{
+  "count": 0,
+  "verdict": "pass",
+  "offenders": [],
+  "checked": [
+    "method+path 신규 14건 전수 대조 — 매뉴얼 §1~14 + 부록 표를 surface.snapshot.json features[].method/path 및 changes.json new_features[] 화이트리스트와 1:1 대조, 14/14 실재, /open/v5/... 지어낸 엔드포인트 0",
+    "user.upsert = PATCH /open/v5/users/{userId} 확인 — surface method=PATCH 일치, 매뉴얼도 'PATCH … (PUT 아님)' 명시, PUT 오기재 없음",
+    "auth 헤더 규칙 대조 — REST 11건 x-access-key+x-access-secret, webhook 3건 x-signature (HMAC); surface auth[] 와 전건 일치, 표면 밖 헤더 주장 0",
+    "provenance 라벨 정직 확인 — surface v5 provenance 는 pinned/inferred(mock 없음). openapi 11건 pinned · webhook 3건 inferred, surface·changes.json 값과 전건 일치. 매뉴얼이 pinned='스냅샷 해시 일치, 라이브 확인 아님', inferred='문서 검증 필요'로 정직 서술, verified-live 단정 0, inferred 를 확정(mock)처럼 위장한 곳 0",
+    "필드·pii_fields·params 대조 — 응답 예시(upsert user.id/name/email, manager.get name/email, sessions.list personType, webhook.message.created entity.plainText, webhook.user.created entity.name/email/mobileNumber 등)·pii_fields·path/query params(userId·userChatId·managerId·groupId required, limit optional, bots/channel/webhook params 없음)를 surface example_response·pii_fields·params 와 대조 — 표면 밖 필드/params 주장 0",
+    "delta 완전성·카운트 대조 — changes.json counts(new=14, new_with_pii=5, new_inferred=3, policy_hold=0) 와 매뉴얼 부록 카운트 일치. baseline 코어(user.get·userchat.list 등)는 '이미 연동'으로만 언급, 신규로 오기재 안 함"
+  ],
+  "sampled_ids": [
+    "openapi.user.upsert",
+    "openapi.user.delete",
+    "openapi.user.event.create",
+    "openapi.user.userchats.create",
+    "openapi.userchat.sessions.list",
+    "openapi.group.message.send",
+    "openapi.manager.get",
+    "openapi.group.list",
+    "openapi.bot.create",
+    "openapi.bot.list",
+    "openapi.channel.get",
+    "webhook.message.created",
+    "webhook.userchat.opened",
+    "webhook.user.created"
+  ],
+  "fixes": []
+}
