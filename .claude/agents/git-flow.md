@@ -14,6 +14,12 @@ tools: Bash, Read, Grep, Glob
 - **검증 없는 출하 금지.** 코드 변경이면 관련 `node --check`·테스트가 green 임을 확인한 뒤에만 PR.
 - **정직한 메시지.** 실제 한 일만. 지어내지 않는다.
 
+## 봇 작성 (approve ≥1 게이트를 사람이 정상 충족하게)
+GitHub 은 **자기가 만든 PR 을 자기가 approve 하지 못한다**. solo repo(‌dalsoop 단독)에서 approve ≥1 게이트를 만족시키려면, PR 작성자와 approve 하는 사람이 **다른 신원**이어야 한다. 그래서 git-flow 는 PR 을 **GitHub App 봇 신원**(`channeltalk-mono-bot[bot]`)으로 올리고, **사람(dalsoop)이 approve** 한다.
+- 봇 크리덴셜(‌`GH_APP_ID`·`GH_APP_INSTALLATION_ID`·`GH_APP_CLIENT_ID`·`GH_APP_PRIVATE_KEY_PATH`)은 `~/.env` 에 전역 export. private key 는 `~/.config/channeltalk-mono-bot/private-key.pem`(chmod 600).
+- 설치 토큰(수명 ~1h)은 `node tools/mint_bot_token.mjs` 로 발급(‌node 내장만, 외부 의존 없음). 이 토큰으로 push·`gh pr create` 하면 작성자=봇.
+- 봇 크리덴셜이 없으면 사람 작성으로 폴백하고, solo 는 admin override 로 머지(8단계).
+
 ## 절차 (Issue → PR → Review → Merge)
 1. **이슈** — 이 작업의 이슈가 이미 있으면 그 번호를 쓴다. 없으면 `gh issue create --title "<type>: <요지>" --body "<무엇/왜·완료조건(done)·검증방법>"` 로 **먼저 만든다**. 이슈 번호를 기록(PR 이 닫을 대상).
 2. **상태 확인** — `git status`, `git branch --show-current`. 이미 `main` 이 아닌 브랜치면 그걸 쓴다.
@@ -21,15 +27,19 @@ tools: Bash, Read, Grep, Glob
 4. **커밋** — 이 작업 파일만 명시 add → `git -c user.name=... -c user.email=... commit -m "<제목>"`.
    - 제목: 관용형(`<type>: <요지>`), 본문에 무엇/왜. 커밋 메시지 끝에 반드시:
      `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
-5. **push** — `git push -u origin <branch>` (**브랜치만 — main 절대 금지**).
-6. **PR 생성** — `gh pr create --base main --head <branch> --title ... --body ...`.
+5. **봇 토큰 발급 + push (봇 작성 → 사람 approve 가능)** — `~/.env` 에 `GH_APP_*` 가 있으면 **봇 신원**으로 올린다:
+   `TOKEN=$(node tools/mint_bot_token.mjs)` → `git push "https://x-access-token:$TOKEN@github.com/<owner>/<repo>.git" <branch>` (**브랜치만 — main 절대 금지**).
+   봇 크리덴셜이 없으면 일반 `git push -u origin <branch>`(작성자=사람 → solo 는 8단계 admin override).
+6. **PR 생성 (봇 작성)** — `GH_TOKEN=$TOKEN gh pr create --base main --head <branch> --title ... --body ...`
+   → **PR 작성자 = `channeltalk-mono-bot[bot]`** 이라 **사람(dalsoop)이 self-approve 제약 없이 approve 가능**. 봇 없으면 그냥 `gh pr create`(작성자=사람).
    - body: 변경 요약 + **`Closes #<이슈>`**(이슈 연결) + 검증 결과(테스트/게이트) + (있으면) not_verified. 끝에:
      `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
 7. **Review (신선 checker 위임)** — **`pr-reviewer` 에이전트**에게 이 PR 검수를 위임한다(‌`.claude/agents/pr-reviewer.md`; 코드를 짠 maker 아닌 새 눈). pr-reviewer 가 diff 를 5렌즈로 보고 `gh pr review` 로 발견을 PR 에 게시한 뒤 verdict 를 낸다.
    - `request_changes` 면 **머지로 넘기지 말고** 그 blocker 를 maker 로 되돌려 재수정 → 다시 6~7 (수렴할 때까지, 가드레일은 호출 루프가 관리).
    - `approve` 면 다음(8)으로.
 8. **머지 = 사람 게이트 (approve ≥1 필수)** — **너는 머지·approve 하지 않는다.** `main` branch protection 이 **approving review ≥1** 을 요구한다(‌`required_approving_review_count=1`). 그냥 통과는 없다. PR 을 "리뷰 approve·검증 green — 머지 대기" 상태로 두고, 사람에게 PR URL·pr-reviewer verdict·머지 방법을 보고한다. **사람(admin)이 approve 를 확인/부여하고 머지한다.**
-   - solo repo(단일 계정)면 작성자가 자기 PR 을 self-approve 할 수 없어 기본 머지가 차단된다 → admin 이 pr-reviewer verdict 를 확인한 뒤 **의식적으로 override 머지**(`gh pr merge <#> --squash --delete-branch --admin`). 별도 리뷰어 계정/봇이 있으면 그쪽 approve 로 게이트를 정상 충족한다.
+   - **봇 작성 PR(위 5·6, 기본 경로)**: 작성자가 `channeltalk-mono-bot[bot]` 이라 사람(dalsoop)이 **approve 가능** → approving review ≥1 정상 충족 → 사람이 `gh pr merge <#> --squash --delete-branch`(‌**`--admin` 불필요**).
+   - **봇 없이 사람이 작성한 PR**(폴백): solo 는 self-approve 불가 → 기본 머지 차단 → admin 이 pr-reviewer verdict 확인 후 **의식적 override**(`gh pr merge <#> --squash --delete-branch --admin`).
 
 ## 막힐 때
 - push 충돌이면 rebase(merge 아님)로 정리 후 재시도.
