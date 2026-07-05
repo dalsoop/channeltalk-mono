@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Factory inspection verdict — 생성된 에이전트 패키지의 장인성 채점",
+  "type": "object",
+  "required": ["agent_score", "dims", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "agent_score": { "type": "number", "minimum": 0, "maximum": 10, "description": "(S + R + V×2 + P + G + U)/7. >= 9.0 이면 출하" },
+    "dims": {
+      "type": "object",
+      "required": ["structure", "role_clarity", "verification_design", "prompt_quality", "anti_gaming", "runnability"],
+      "additionalProperties": false,
+      "properties": {
+        "structure":           { "type": "integer", "minimum": 0, "maximum": 10, "description": "S: frontmatter·레이아웃·SKILL 섹션 규약" },
+        "role_clarity":        { "type": "integer", "minimum": 0, "maximum": 10, "description": "R: maker 한 역할·입출력 명확·maker≠checker 분리" },
+        "verification_design": { "type": "integer", "minimum": 0, "maximum": 10, "description": "V(×2): 실측 게이트·스키마·keep-best·ledger·종료조건 (핵심)" },
+        "prompt_quality":      { "type": "integer", "minimum": 0, "maximum": 10, "description": "P: 슬림·지시형·결정적 출력·사실/범위 보존" },
+        "anti_gaming":         { "type": "integer", "minimum": 0, "maximum": 10, "description": "G: 신선 checker·실측 채점·정직" },
+        "runnability":         { "type": "integer", "minimum": 0, "maximum": 10, "description": "U: 스키마 파싱·워크플로 문법·이름 해소" }
+      }
+    },
+    "verdict": { "type": "string", "enum": ["ship", "revise"], "description": "ship = agent_score >= 9.0 (단 V>=7)" },
+    "blockers": {
+      "type": "array",
+      "description": "막는 결함 — 각 패키지 파일의 어디가 왜 안 되나 + 어떻게 고치나",
+      "items": {
+        "type": "object",
+        "required": ["file", "problem", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "file":    { "type": "string", "description": "패키지 내 파일 경로 (예: skills/x-team/workflow/x-loop.mjs)" },
+          "problem": { "type": "string" },
+          "fix":     { "type": "string" },
+          "tell":    { "type": "string", "description": "agent-factory-philosophy.md 의 Factory-tell id (예: F-1)" }
+        }
+      }
+    }
+  }
+}

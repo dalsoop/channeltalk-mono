@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "channeltalk/surface.schema.json",
+  "title": "ssot/api-surface.json — 채널톡 API 표면(모킹 SSOT)",
+  "type": "object",
+  "required": ["source", "base_url", "provenance_default", "surface_version", "features"],
+  "additionalProperties": false,
+  "properties": {
+    "source": { "type": "string", "description": "선언 SSOT (예: https://api-doc.channel.io/)" },
+    "base_url": { "type": "string", "description": "REST base_url (예: https://api.channel.io/open/v5)" },
+    "provenance_default": { "type": "string", "enum": ["mock", "inferred"], "description": "verified-live 금지" },
+    "surface_version": { "type": "integer", "minimum": 1, "description": "신기능 추가마다 +1" },
+    "features": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/feature" }
+    }
+  },
+  "definitions": {
+    "feature": {
+      "type": "object",
+      "required": ["id", "category", "method", "path", "auth", "summary", "pii_fields", "dir", "provenance", "added_in_version"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "description": "안정적 식별자(불변). baseline/changes 가 이걸로 추적", "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)+$" },
+        "category": { "type": "string", "enum": ["User", "UserChat", "Message", "Manager", "Group", "Bot", "Channel", "Webhook", "Event"] },
+        "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE"] },
+        "path": { "type": "string" },
+        "event": { "type": "string", "description": "webhook 이벤트명(CB 전용)" },
+        "auth": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "summary": { "type": "string" },
+        "params": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "in", "required"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "in": { "type": "string", "enum": ["path", "query", "body", "header"] },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "pii_fields": { "type": "array", "items": { "type": "string" }, "description": "개인정보 필드(비면 없음)" },
+        "dir": { "type": "string", "enum": ["R", "W", "CB"], "description": "R=읽기(채널톡→우리) W=쓰기(우리→채널톡) CB=webhook 콜백" },
+        "example_request": { "type": "string" },
+        "example_response": { "type": "object" },
+        "value": { "type": "string" },
+        "provenance": { "type": "string", "enum": ["mock", "inferred"], "description": "verified-live 금지" },
+        "added_in_version": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
