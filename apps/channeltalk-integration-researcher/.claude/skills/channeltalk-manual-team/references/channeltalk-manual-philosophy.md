@@ -1,6 +1,6 @@
 # channeltalk-manual-team 철학 — 근거에 갇힌 매뉴얼을 0/0/0 까지 미는 검증 (SSOT 루브릭)
 
-이 팀은 **결정적 diff(changes.json) + surface.snapshot.json 만 근거로** 채널톡 신규 기능별 PII-안전 연동 매뉴얼(`update-manual.md`)을 쓰고, **신선 평가 3축**으로 게이트한다. 도메인 정본: `/Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/CHANNELTALK.md`(§5 루프·§6 PII·§12 표면 시드). 공장 정본: `main/apps/agent-factory/.claude/skills/agent-factory/references/agent-factory-philosophy.md`(channeltalk-mono repo 내 실경로 — 실재 확인됨).
+이 팀은 **결정적 diff(changes.json) + surface.snapshot.json 만 근거로** 채널톡 신규 기능별 PII-안전 연동 매뉴얼(`update-manual.md`)을 쓰고, **신선 평가 3축**으로 게이트한다. 도메인 정본: `/Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/main/CHANNELTALK.md`(§5 루프·§6 PII·§12 표면 시드). 공장 정본: `main/apps/agent-factory/.claude/skills/agent-factory/references/agent-factory-philosophy.md`(channeltalk-mono repo 내 실경로 — 실재 확인됨).
 
 ## 믿음 (한 줄)
 > 좋은 매뉴얼은 문장력이 아니라 **근거(changes+surface) 안에 갇혀 있고, 실측 카운트로 0/0/0 까지 밀리는 검증 시스템**이다.

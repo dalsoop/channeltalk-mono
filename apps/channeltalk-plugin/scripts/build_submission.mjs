@@ -44,7 +44,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ── 경로 앵커(하드코딩 대신 이 스크립트 위치 기준 상대) ─────────────
 const PLUGIN_ROOT = join(__dirname, ".."); // channeltalk-plugin/
 const APPS_ROOT = join(PLUGIN_ROOT, ".."); // main/apps/
-const REPO_ROOT = join(APPS_ROOT, "..", ".."); // main/ 상위 = repo 루트(logs/ 위치)
+const REPO_ROOT = join(APPS_ROOT, ".."); // main worktree root (logs/ 위치)
 
 const MOCK = join(APPS_ROOT, "channeltalk-api-mock");
 const RESEARCHER = join(APPS_ROOT, "channeltalk-integration-researcher");
@@ -128,8 +128,10 @@ function main() {
   requirePath(join(MOCK, "schemas"), "mock schemas/");
   requirePath(join(MOCK, "test", "run.mjs"), "mock test/run.mjs");
   requirePath(join(MOCK, "scripts", "diff_surface.mjs"), "diff_surface.mjs");
+  requirePath(join(MOCK, "scripts", "refresh_surface.mjs"), "refresh_surface.mjs");
   requirePath(join(RESEARCHER, "scripts", "verify_manual.mjs"), "verify_manual.mjs");
   requirePath(join(RESEARCHER, "scripts", "record_depth.mjs"), "record_depth.mjs");
+  requirePath(join(RESEARCHER, "scripts", "build_receipt.mjs"), "build_receipt.mjs");
   requirePath(join(RESEARCHER, ".claude", "agents"), "researcher agents/");
   requirePath(join(RESEARCHER, "customers"), "researcher customers/");
   // 팀 스킬 참조 파일 — 4개 에이전트 md 가 skills/channeltalk-manual-team/ 아래로 참조하는 실체.
@@ -154,6 +156,9 @@ function main() {
   // 3) scripts: diff_surface(그대로) + verify_manual/record_depth(import 재작성).
   const scriptsDir = join(SKILL_DIR, "scripts");
   copyFile(join(MOCK, "scripts", "diff_surface.mjs"), join(scriptsDir, "diff_surface.mjs"));
+  // refresh_surface(공개 swagger pin·검증, ../lib 참조 그대로) + build_receipt(node 표준만) → 재작성 없이 복사.
+  copyFile(join(MOCK, "scripts", "refresh_surface.mjs"), join(scriptsDir, "refresh_surface.mjs"));
+  copyFile(join(RESEARCHER, "scripts", "build_receipt.mjs"), join(scriptsDir, "build_receipt.mjs"));
   const rw1 = copyMjsRewritten(
     join(RESEARCHER, "scripts", "verify_manual.mjs"),
     join(scriptsDir, "verify_manual.mjs"),
@@ -189,6 +194,18 @@ function main() {
   // 팀 스킬 진입점(SKILL.md)도 동봉해 스킬을 자족형으로 — 있으면 복사.
   if (existsSync(join(TEAM_SRC, "SKILL.md"))) {
     copyFile(join(TEAM_SRC, "SKILL.md"), join(TEAM_DIR, "SKILL.md"));
+  }
+
+  // 5c) shipped 데모 run 동봉(있으면) — out/<stamp>-<site>/ 로 overlay.
+  //     심사 증거: changes·surface.snapshot·update-manual·manual-verdict·reviews·run-receipt·depth-ledger.
+  const shippedSrc = join(RESEARCHER, "shipped-runs");
+  let shippedRuns = 0;
+  if (existsSync(shippedSrc)) {
+    for (const d of readdirSync(shippedSrc)) {
+      if (d.startsWith(".")) continue;
+      copyDir(join(shippedSrc, d), join(SKILL_DIR, "out", d));
+      shippedRuns++;
+    }
   }
 
   // 6) logs(무편집 복사, repo 루트 logs/).

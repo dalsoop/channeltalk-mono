@@ -21,7 +21,7 @@
 
 ## 도메인 정본 (맥락 확인용, 대상 아님)
 
-- `/Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/CHANNELTALK.md` — 문제·데이터계약·게이트·PII·제출·검증의 SSOT.
+- `/Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/main/CHANNELTALK.md` — 문제·데이터계약·게이트·PII·제출·검증의 SSOT.
 
 ## 심사관이 반드시 재확인할 것 (믿지 말고 실행/인용)
 

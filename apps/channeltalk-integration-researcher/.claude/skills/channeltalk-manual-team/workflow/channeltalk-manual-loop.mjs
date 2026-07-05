@@ -2,7 +2,7 @@
 // 입력: out/<run>/changes.json + surface.snapshot.json → 출력: update-manual.md (PII-안전 연동 매뉴얼)
 // 규약: top-level return/await 허용(런타임 async-wrap). Date.now()/Math.random()/fs 금지.
 // 정본: skills/channeltalk-manual-team/references/channeltalk-manual-philosophy.md
-//        도메인 SSOT: /Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/CHANNELTALK.md 5.2·6·12
+//        도메인 SSOT: /Users/jeonghan/Documents/WORK/WORKSPACE/apps/channeltalk-mono/main/CHANNELTALK.md 5.2·6·12
 export const meta = {
   name: 'channeltalk-manual-loop',
   description: '결정적 diff(changes.json)+surface.snapshot.json → 기능별 PII-안전 연동 매뉴얼(update-manual.md)을 쓰는 verification-gated 루프. maker(매뉴얼 writer)→checker 3(accuracy·completeness·privacy). 결정적 게이트(지어냄 0·누락 0·PII누락+secret누출 0), keep-best, run ledger, 종료조건. 역할은 코드가 인라인 spawn.',
