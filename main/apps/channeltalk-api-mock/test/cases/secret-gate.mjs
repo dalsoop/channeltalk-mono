@@ -150,4 +150,50 @@ export function run({ record, surface }) {
       },
     );
   }
+
+  // ── 18. secret_gate_separator_split (. : , ; 로 조각난 실토큰 CAUGHT, IPv6·날짜·MAC 오탐 0) ──
+  {
+    // 리뷰 재현(#1·#2): TOKEN_RE 문자클래스가 토큰 내 구분자(: .)를 제외해, 실토큰이 그 문자로
+    // 쪼개지면 개별 조각이 임계 미만이 돼 게이트를 통과(secret false negative)하던 우회. 이제
+    // hex 조각을 이어붙인 core 가 a-f 섞인 순수 hex 40자+ 면 잡는다.
+    const colonHex = "Bearer 0123456789abcdef0123:456789abcdef01234567"; // 40hex 를 : 로 분리
+    const dotHex = "Bearer 0123456789abcdef0123.456789abcdef01234567"; // 40hex 를 . 로 분리
+    const angleColon = "x-access-key: <KEY:0123456789abcdef0123:456789abcdef01234567>"; // 꺾쇠 안 : 분리
+    // 오탐 회귀 방지: IPv6(≤32 hex)·dotted UUID(32)·날짜·MAC 은 core<40 또는 조각 구조로 계속 0.
+    const ipv6 = "host: 2001:0db8:85a3:0000:0000:8a2e:0370:7334"; // 32 hex → 40 미만
+    const dottedUuid = "id: 550e8400.e29b.41d4.a716.446655440000"; // 32 hex → 40 미만
+    const dateMac = "2024.01.02 12:34:56 mac 01:23:45:67:89:ab"; // 짧은 hex 그룹들
+    record(
+      "secret_gate_separator_split",
+      { split: ": / . / 꺾쇠 로 조각난 40hex", benign: "IPv6·dotted-UUID·date·MAC" },
+      { colon_hits: 1, dot_hits: 1, angle_hits: 1, ipv6_hits: 0, uuid_hits: 0, datemac_hits: 0 },
+      {
+        colon_hits: findSecrets(colonHex).length,
+        dot_hits: findSecrets(dotHex).length,
+        angle_hits: findSecrets(angleColon).length,
+        ipv6_hits: findSecrets(ipv6).length,
+        uuid_hits: findSecrets(dottedUuid).length,
+        datemac_hits: findSecrets(dateMac).length,
+      },
+    );
+  }
+
+  // ── 19. secret_gate_pure_digits (순수 숫자 24자+ 는 secret 아님, a-f 섞인 hex 는 CAUGHT) ──
+  {
+    // 리뷰 재현(#3): HEX_RE 가 순수 숫자열도 hex 로 봐 24자리+ 주문번호·타임스탬프·연번 ID 를
+    // 실토큰으로 오탐(false positive)하던 문제. 이제 hex 는 a-f 글자 1개 이상을 요구한다.
+    const pureDigits = "order_id: 123456789012345678901234"; // 24 순수 숫자 → secret 아님
+    const longDigits = "seq: 12345678901234567890123456789012345678901"; // 41 순수 숫자 → 아님
+    const hexWithAf = "token=0123456789abcdef01234567"; // 24 hex + a-f → 실토큰
+    record(
+      "secret_gate_pure_digits",
+      { pure: "24·41자 순수 숫자", hex: "24자 a-f 섞인 hex" },
+      { pure24_hits: 0, pure41_hits: 0, hex_hits: 1 },
+      {
+        pure24_hits: findSecrets(pureDigits).length,
+        pure41_hits: findSecrets(longDigits).length,
+        hex_hits: findSecrets(hexWithAf).length,
+      },
+    );
+  }
 }

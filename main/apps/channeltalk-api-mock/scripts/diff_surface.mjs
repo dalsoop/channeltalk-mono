@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// scripts/diff_surface.mjs — CLI: 결정적 diff + 4게이트. lib 를 import 해 얇게.
+// scripts/diff_surface.mjs — CLI: 결정적 diff + 게이트. lib 를 import 해 얇게.
+// 게이트는 5개다: 4개(diff_completeness·no_fabricated_endpoint·no_secret_in_example·
+// every_pii_flagged) 는 항상, 5번째 surface_in_pinned_spec 은 pin 된 실 스펙
+// (ssot/channel-swagger.json)을 로컬 파일로 읽어(네트워크 0) specOps 를 뽑을 수 있을 때만.
+// 스펙 파일이 없으면 정직하게 이 게이트를 생략하고 stdout summary 에 그 사실을 표기한다.
 //
 // 사용:
 //   node scripts/diff_surface.mjs \
@@ -14,11 +18,12 @@
 // 결정성: --stamp 주입 시 stamp 고정(테스트/재현). 미주입 시에만 실시계(Date) 사용.
 // lib(순수)는 Date/random 을 절대 쓰지 않는다 — 시각은 이 스크립트 경계에서만.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { basename, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadSurface, loadJson, validate } from "../lib/surface.mjs";
 import { computeChanges, gatesPass } from "../lib/diff.mjs";
+import { loadSpecOps } from "../lib/gates.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -79,12 +84,10 @@ export function buildReceipt(changes, stamp, site) {
       new_inferred: changes.counts.new_inferred,
       removed: changes.removed.length,
     },
-    gates: {
-      diff_completeness: changes.gates.diff_completeness,
-      no_fabricated_endpoint: changes.gates.no_fabricated_endpoint,
-      no_secret_in_example: changes.gates.no_secret_in_example,
-      every_pii_flagged: changes.gates.every_pii_flagged,
-    },
+    // 게이트는 changes.gates 를 그대로 반영한다(4개 항상 + surface_in_pinned_spec 은
+    // specOps 를 뽑은 실행에서만 존재). 하드코딩 키 열거 대신 changes 에서 통째로 파생 —
+    // 게이트가 늘어도 receipt 가 자동 동기화된다(단일 진실원천: changes.gates).
+    gates: { ...changes.gates },
     not_verified: changes.new_features
       .filter((n) => n.provenance === "inferred")
       .map((n) => n.id),
@@ -110,7 +113,22 @@ function main() {
   const sv = validate(surface, surfaceSchema);
   if (!sv.ok) die("surface schema invalid:\n" + sv.errors.join("\n"), 1);
 
-  const changes = computeChanges(surface, baseline, profile);
+  // pin 된 실 OpenAPI 스펙을 로컬 파일로만 읽는다(네트워크 0). 있으면 specOps 를 뽑아
+  // 5번째 게이트(surface_in_pinned_spec)를 켠다. 없으면 정직하게 스킵(게이트 생략)하고
+  // stdout summary 의 spec_pin 에 그 사실을 표기한다.
+  const specPath = typeof args.spec === "string"
+    ? args.spec
+    : join(__dirname, "..", "ssot", "channel-swagger.json");
+  let specOps = null;
+  let specPinNote;
+  if (existsSync(specPath)) {
+    specOps = loadSpecOps(loadJson(specPath));
+    specPinNote = { spec: basename(specPath), ops: specOps.size, gate: "surface_in_pinned_spec" };
+  } else {
+    specPinNote = { spec: null, skipped: true, reason: `pinned spec not found at ${specPath}` };
+  }
+
+  const changes = computeChanges(surface, baseline, profile, specOps);
 
   // changes 스키마 자체검증(산출 계약 준수 확인).
   const changesSchema = loadJson(join(__dirname, "..", "schemas", "changes.schema.json"));
@@ -142,6 +160,7 @@ function main() {
         counts: changes.counts,
         gates: changes.gates,
         gate_offenders: changes.gate_offenders,
+        spec_pin: specPinNote,
         pass,
       },
       null,

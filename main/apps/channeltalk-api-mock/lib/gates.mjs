@@ -35,6 +35,15 @@ const CONTIGUOUS_MIN_LEN = 40;
 // 소·대문자 모두 포함 — all-lowercase 뿐 아니라 all-UPPERCASE 40자+ 단일종 토큰도 잡는다(레드팀 재현 차단).
 const ALNUM_RUN_RE = /[A-Za-z0-9]+/g;
 
+// 인라인 구분자(. : , ;)로 조각난 hex 실토큰 탐지용(레드팀 재현 차단). 실 hex/base64
+// 토큰엔 이 구분자가 없지만, 붙여넣기·난독화로 실토큰이 . : 로 쪼개지면 개별 조각이
+// SECRET_MIN_LEN 미만이 돼 TOKEN_RE 연속-후보에서 샌다. hex 조각을 이어붙인 core 가
+// "a-f 글자 섞인 순수 hex, CONTIGUOUS_MIN_LEN(40)자+" 면 실토큰으로 본다. 40 임계가
+// IPv6(≤32 hex)·UUID(32)·MAC·날짜(dotted)를 배제해 기존 오탐 0 을 지킨다. (base64 계열
+// 분리는 산문과 구별이 모호해 여기서 다루지 않는다 — 잔여 갭으로 남긴다.)
+const INLINE_SEP_RE = /[.:,;]/g;
+const HEX_FRAGMENT_RE = /[0-9a-fA-F]+(?:[.:,;][0-9a-fA-F]+)+/g;
+
 // 토큰 안에서 구분자로 쪼갠 가장 긴 소문자/숫자 연속 런의 길이.
 function longestContiguousRun(token) {
   let max = 0;
@@ -81,7 +90,10 @@ function isPlaceholderToken(token, haystack, index) {
 }
 
 function looksLikeRealToken(token) {
-  if (HEX_RE.test(token)) return token.length >= HEX_MIN_LEN;
+  // 순수 hex: 길이 임계 + a-f 글자 1개 이상. 순수 숫자(0-9)만인 문자열은 hex 실토큰으로
+  // 보지 않는다 — 주문번호·타임스탬프·연번 ID 오탐 방지. 진짜 hex 토큰은 a-f 를 거의
+  // 항상 포함하므로 이 조건이 실토큰 검출을 놓치지 않는다.
+  if (HEX_RE.test(token)) return token.length >= HEX_MIN_LEN && /[a-fA-F]/.test(token);
   // base64 계열: 대문자·소문자·숫자가 최소 2종 이상 섞여야 토큰다움(순수 단어 배제).
   if (!BASE64_RE.test(token)) return false;
   // 구분자(- _ / + =)는 산문·경로·마크다운 앵커에도 흔하므로 "문자 종류"로 세지 않는다.
@@ -120,6 +132,20 @@ export function findSecrets(text) {
     if (isPlaceholderToken(token, text, m.index)) continue;
     if (looksLikeRealToken(token)) hits.push(token);
   }
+
+  // (c) 구분자(. : , ;)로 조각난 hex 실토큰: 개별 조각이 SECRET_MIN_LEN 미만이라 (b)가
+  //     놓친 것만 대상. 조각을 이어붙인 core 가 a-f 섞인 순수 hex 40자+ 면 실토큰으로 본다.
+  //     (개별 조각이 이미 24자+ 면 (b)가 잡으므로 중복·회귀 방지로 건너뛴다.)
+  let g;
+  HEX_FRAGMENT_RE.lastIndex = 0;
+  while ((g = HEX_FRAGMENT_RE.exec(text)) !== null) {
+    const frag = g[0];
+    if (hits.includes(frag)) continue;
+    const longest = frag.split(INLINE_SEP_RE).reduce((mx, r) => (r.length > mx ? r.length : mx), 0);
+    if (longest >= SECRET_MIN_LEN) continue; // (b)가 이미 개별 조각을 잡음
+    const core = frag.replace(INLINE_SEP_RE, "");
+    if (core.length >= CONTIGUOUS_MIN_LEN && /[a-fA-F]/.test(core)) hits.push(frag);
+  }
   return hits;
 }
 
@@ -135,16 +161,62 @@ export function diffCompleteness(surfaceIds, integratedIds, newIds) {
 }
 
 // ── 게이트 2: no_fabricated_endpoint ────────────────────────────────
-// ⚠️ 정직성 한계(설계상 오프라인): 이 게이트는 "표면 파일 내부 정합성"만 본다 —
-//    changes 의 모든 신규 id 가 표면(ssot/api-surface.json) 안에 실재하는지.
-//    이것은 채널톡 실제 라이브 API 와의 대응을 검증하지 '못한다'. 존재하지 않는
-//    엔드포인트라도 표면에 넣기만 하면 이 게이트는 통과한다(가짜 표면 → 통과).
-//    즉 "표면에 없는 id 를 지어내지 않았다"는 보장일 뿐, "표면 자체가 진짜다"는
-//    보장이 아니다. 라이브 검증은 이 오프라인 도구의 범위가 아니며(의도적),
-//    표면의 진위는 표면 저작·리뷰 단계(provenance 표기·사람 검수)의 책임이다.
+// 이 게이트는 "표면 파일 내부 정합성"을 본다 — changes 의 모든 신규 id 가
+// 표면(ssot/api-surface.json) 안에 실재하는지. 이것만으로는 "표면 자체가 진짜냐"
+// 를 못 본다(존재하지 않는 엔드포인트라도 표면에 넣으면 통과).
+//
+// 그 빈틈은 아래 surfaceInPinnedSpec 이 메운다: 표면의 비-inferred(=pinned) feature 가
+// pin 된 실 OpenAPI 스펙(ssot/channel-swagger.json)의 operation 집합에 실재함을 대조한다.
+// 이제 게이트는 "표면에 없는 id 를 지어내지 않았다"에 더해 "표면의 REST feature 가
+// 공개 스펙 스냅샷에 실재한다"까지 검증한다 — 오프라인이지만(로컬 pin 읽음, 네트워크 0)
+// 더는 파일 내부 정합성에만 갇히지 않는다.
+//
+// 정직성 경계: pinned = "공개 스펙 스냅샷(해시 고정)과 일치". 이는 "라이브 호출로
+// 확인했다"가 아니다. webhook(inferred)은 스펙 밖(별도 문서)이라 이 대조에서 제외한다.
 export function noFabricatedEndpoint(surfaceIds, newIds) {
   const surface = new Set(surfaceIds);
   const offenders = newIds.filter((id) => !surface.has(id));
+  return { ok: offenders.length === 0, offenders };
+}
+
+// ── pin 된 실 스펙 대조 (surfaceInPinnedSpec) ──────────────────────
+// 표면의 method+path 를 pin 된 OpenAPI 스펙 operation 집합과 대조한다. 순수함수 —
+// I/O 없음(스펙 operation 집합은 호출자가 loadSpecOps 로 미리 뽑아 넘긴다).
+//
+// 매칭 정규화: 버전 세그먼트(/open/vN)를 지우고, path 파라미터({userId} 등)를 {} 로
+// 접어 "method + 정규화 path" 로 비교한다. 스펙엔 /open/v4·/open/v5 가 공존하므로
+// 버전을 무시해야 한 operation 으로 합쳐진다.
+
+// path 정규화: 선두 /open/vN 제거 + 모든 {param} → {}. (스펙·표면 공통 규칙)
+export function normalizeSpecPath(p) {
+  if (typeof p !== "string") return "";
+  return p.replace(/\/open\/v\d+/, "").replace(/\{[^}]*\}/g, "{}");
+}
+
+// OpenAPI 3.x 스펙 객체 → 정규화 operation 키 집합("METHOD /norm/path").
+// 순수: 넘겨받은 파싱된 스펙만 읽는다(네트워크·파일 I/O 없음).
+const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options"];
+export function loadSpecOps(spec) {
+  const ops = new Set();
+  const paths = spec && spec.paths ? spec.paths : {};
+  for (const p of Object.keys(paths)) {
+    for (const m of Object.keys(paths[p])) {
+      if (HTTP_METHODS.includes(m)) ops.add(`${m.toUpperCase()} ${normalizeSpecPath(p)}`);
+    }
+  }
+  return ops;
+}
+
+// 표면 feature 들이 pin 된 스펙 operation 집합(specOps: Set) 에 실재하는지 대조한다.
+// inferred(webhook 등 스펙 밖) feature 는 제외한다 — 스펙 대조 대상이 아니다.
+// 반환 { ok, offenders[] }: offenders 는 스펙에 없는 비-inferred feature 의 id.
+export function surfaceInPinnedSpec(features, specOps) {
+  const offenders = [];
+  for (const f of features) {
+    if (f.provenance === "inferred") continue; // 스펙 밖(별도 문서) — 대조 제외
+    const key = `${f.method} ${normalizeSpecPath(f.path)}`;
+    if (!specOps.has(key)) offenders.push(f.id);
+  }
   return { ok: offenders.length === 0, offenders };
 }
 

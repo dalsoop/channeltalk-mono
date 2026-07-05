@@ -1,13 +1,27 @@
 // test/cases/receipt.mjs — 영수증 파생 정합성(diff_surface·build_receipt 가 입력에서 파생하는가).
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { computeChanges } from "../../lib/diff.mjs";
+import { loadSpecOps } from "../../lib/gates.mjs";
+import { loadJson } from "../../lib/surface.mjs";
 import { buildReceipt } from "../../scripts/diff_surface.mjs";
 import { buildReceipt as buildRunReceipt } from "../../../channeltalk-integration-researcher/scripts/build_receipt.mjs";
 import { profile, baseline } from "../harness.mjs";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SPEC_PATH = join(__dirname, "..", "..", "ssot", "channel-swagger.json");
+
 export function run({ record, surface }) {
-  // ── 12. run_receipt_consistency (영수증이 changes 와 일치) ───────
+  const specOps = loadSpecOps(loadJson(SPEC_PATH));
+
+  // ── 12. run_receipt_consistency (영수증이 changes 와 일치, 5게이트 배선 포함) ─
   {
-    const changes = computeChanges(surface, baseline([]), profile({ pii_policy: "no-transmit" }));
+    const changes = computeChanges(
+      surface,
+      baseline([]),
+      profile({ pii_policy: "no-transmit" }),
+      specOps,
+    );
     const receipt = buildReceipt(changes, "260705120000", "example");
     // not_verified = provenance=inferred 인 신규 id.
     const inferredIds = changes.new_features
@@ -58,6 +72,7 @@ export function run({ record, surface }) {
         no_fabricated_endpoint: true,
         no_secret_in_example: true,
         every_pii_flagged: true,
+        surface_in_pinned_spec: true, // 5번째 게이트 배선 → build_receipt 가 5/5 로 세는지 확인
       },
       gate_offenders: {},
       new_features: [
@@ -90,12 +105,12 @@ export function run({ record, surface }) {
 
     record(
       "build_receipt_derivation",
-      { reviews: "3 pass / 1 fail / none", verdict: "approve", gates: "4/4 pass" },
+      { reviews: "3 pass / 1 fail / none", verdict: "approve", gates: "5/5 pass" },
       {
         pass_site: "www.example.net",
         pass_run: "260705120000-www.example.net",
         pass_gates: {
-          diff: "4/4 pass",
+          diff: "5/5 pass",
           manual_deterministic: "approve (missed 0)",
           llm_semantic: "3/3 pass (accuracy·completeness·privacy, count 0)",
         },

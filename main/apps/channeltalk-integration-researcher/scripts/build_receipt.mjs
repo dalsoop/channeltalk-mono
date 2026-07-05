@@ -68,8 +68,17 @@ function summarizeReviews(reviews) {
   let countSum = 0;
   const failedLabels = [];
   const labels = [];
-  for (const { name, review } of reviews) {
+  for (const entry of reviews) {
+    const name = entry && entry.name;
+    const review = entry && entry.review;
     labels.push(name);
+    // 손상/누락 리뷰 객체(null·비객체 — 예: reviews/*.json 이 JSON 리터럴 null)는 crash 시키지
+    // 않고 정직하게 not-pass 로 처리한다(clean:false 로 파생). 값 가드만 있고 컨테이너 가드가
+    // 없어 buildReceipt 가 순수함수인데도 터지던 회귀 차단.
+    if (!review || typeof review !== "object") {
+      failedLabels.push(`${name ?? "?"}(missing)`);
+      continue;
+    }
     const count = Number.isInteger(review.count) ? review.count : 0;
     countSum += count;
     // pass 판정: 명시 verdict 우선, 없으면 count 0 && offenders 비었을 때만 pass.
@@ -87,15 +96,13 @@ function summarizeReviews(reviews) {
   return { text, allPass, ran: true, total, passed };
 }
 
-// ── diff 게이트 4개 요약: changes.gates → "4/4 pass" 또는 offender 표기 ─────────
+// ── diff 게이트 요약: changes.gates → "N/N pass" 또는 offender 표기 ─────────────
+// 게이트 개수는 changes.gates 에 실재하는 키에서 파생한다(하드코딩 목록 아님) — 5번째
+// surface_in_pinned_spec 이 켜진 실행이면 자동으로 5/5, 안 켜진(하위호환) 실행이면 4/4.
+// 결정적 순서를 위해 키를 정렬한다.
 function summarizeDiffGates(changes) {
   const gates = changes.gates || {};
-  const names = [
-    "diff_completeness",
-    "no_fabricated_endpoint",
-    "no_secret_in_example",
-    "every_pii_flagged",
-  ];
+  const names = Object.keys(gates).sort();
   const passed = names.filter((n) => gates[n] === true);
   const failed = names.filter((n) => gates[n] !== true);
   const allPass = failed.length === 0;
@@ -113,8 +120,10 @@ function summarizeDiffGates(changes) {
 
 // ── manual_deterministic 요약: verdict + missed 수 → "approve (missed 0)" ────────
 function summarizeManual(verdict) {
-  const v = typeof verdict.verdict === "string" ? verdict.verdict : "unknown";
-  const missed = Array.isArray(verdict.missed) ? verdict.missed : [];
+  // verdict 객체 자체가 null/undefined(예: manual-verdict.json 이 JSON 리터럴 null)여도
+  // crash 대신 "unknown (missed 0)" 로 정직 파생 → approved:false → clean:false.
+  const v = verdict && typeof verdict.verdict === "string" ? verdict.verdict : "unknown";
+  const missed = verdict && Array.isArray(verdict.missed) ? verdict.missed : [];
   const approved = v === "approve" && missed.length === 0;
   return { text: `${v} (missed ${missed.length})`, allPass: approved };
 }
@@ -156,9 +165,12 @@ export function buildReceipt(changes, verdict, reviews, opts = {}) {
   const llm = summarizeReviews(reviews);
 
   // not_verified: provenance=inferred 인 신규 id (라이브 미검증분). changes 에서 파생.
+  // id 없는 inferred 엔트리(손편집/서드파티 changes.json)는 undefined→JSON null 로 조용히
+  // 들어가지 않게 거른다 — feature id 를 정확히 명시해야 할 필드에 null 방지.
   const notVerified = (changes.new_features || [])
-    .filter((n) => n.provenance === "inferred")
-    .map((n) => n.id);
+    .filter((n) => n && n.provenance === "inferred")
+    .map((n) => n.id)
+    .filter((id) => typeof id === "string" && id.length > 0);
 
   // clean: 모든 diff 게이트 통과 && manual approve(missed 0) && llm 실행되고 전부 pass.
   // 하나라도 안 서면 false — authored true 금지, 전부 계산.
