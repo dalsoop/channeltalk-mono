@@ -34,14 +34,17 @@ skills = 53~79%. 원리: **retrieval-led > pre-training-led**. 세부는 아래 
 8. **에이전트 루프는 `agent-factory` 방식 재사용** — brief/spec→architect(maker)→inspector(checker)→게이트→실측 출하.
 9. **스킬보다 에이전트 md 우선** — 역할(maker·checker·평가)은 `.claude/agents/*.md`로. 스킬은 진입점·절차만.
 
-## Git 워크플로 (필수 — main 직접 push 금지)
+## Git 워크플로 (필수 — Issue → PR → Review → Merge, main 직접 push 금지)
 
-모든 변경은 **feature branch → PR → merge**. `main` 은 **branch protection 으로 직접 push 차단**(강제). 루프의 마지막 "출하" 단계는 **`git-flow` 에이전트**(`.claude/agents/git-flow.md`)가 수행한다(agent-factory 철학 F-9).
+모든 변경은 **Issue → PR → Review → Merge**. `main` 은 **branch protection 으로 직접 push 차단**(강제). 루프의 마지막 "출하" 단계는 두 에이전트가 수행한다(agent-factory 철학 F-9):
+- **`git-flow`**(`.claude/agents/git-flow.md`) — 이슈 생성 → 브랜치 → 명시 커밋 → push → PR(`Closes #이슈`) → pr-reviewer 위임.
+- **`pr-reviewer`**(`.claude/agents/pr-reviewer.md`) — PR diff 를 신선하게 5렌즈로 검수하고 `gh pr review` 로 게시(maker≠checker 를 출하 diff 까지 확장).
 
-- 🚫 `main` 직접 push·commit·머지. 🚫 `git add -A`·`git commit -a`(명시 경로만).
-- ✅ `git switch -c <type>/<slug>` → 명시 add·커밋(관용 메시지 + Co-Authored-By) → `git push -u` → `gh pr create` → `gh pr merge --squash`.
+- 🚫 `main` 직접 push·commit. 🚫 **에이전트 자동 머지**(‌`gh pr merge` 는 사람이). 🚫 `git add -A`·`git commit -a`(명시 경로만).
+- ✅ `gh issue create` → `git switch -c <type>/<slug>` → 명시 add·커밋(관용 메시지 + Co-Authored-By) → `git push -u` → `gh pr create`(`Closes #N`) → **pr-reviewer 리뷰** → **머지는 사람**(`gh pr merge --squash --delete-branch`).
 - 검증(node --check·테스트 green) 통과분만 PR. PR body 에 검증 결과·not_verified 포함.
-- 머지가 protection 으로 막히면 **우회하지 말고** 막는 규칙을 보고.
+- **머지 = 사람 게이트.** pr-reviewer `approve` + 검증 green 이면 "머지 대기"로 사람에게 넘긴다. `request_changes` 면 maker 로 되돌려 재수정→재리뷰.
+- 머지·push 가 protection 으로 막히면 **우회하지 말고** 막는 규칙을 보고.
 
 ## 인덱스 (retrieval-led — 필요할 때 그 파일을 연다)
 
