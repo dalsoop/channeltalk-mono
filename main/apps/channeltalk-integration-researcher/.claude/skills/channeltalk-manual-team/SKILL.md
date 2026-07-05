@@ -59,6 +59,5 @@ skills/channeltalk-manual-team/SKILL.md               진입점(이 파일)
 skills/channeltalk-manual-team/schemas/*.schema.json  채점 스키마 3종
 skills/channeltalk-manual-team/references/channeltalk-manual-philosophy.md  도메인 SSOT 루브릭
 skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs         verification-gated 루프
-skills/channeltalk-manual-team/examples/channeltalk-manual.run.example.yaml 바인딩 예시
 결정적 verify: apps/channeltalk-integration-researcher/scripts/verify_manual.mjs (--changes/--manual, exit approve=0·revise=3)
 ```

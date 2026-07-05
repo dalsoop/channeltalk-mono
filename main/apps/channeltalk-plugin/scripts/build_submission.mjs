@@ -9,11 +9,14 @@
 // 공유 코드(형제 앱에서 overlay):
 //   ../channeltalk-api-mock/{lib,ssot,schemas,test,scripts/diff_surface.mjs}
 //   ../channeltalk-integration-researcher/{scripts/{verify_manual,record_depth}.mjs,.claude/agents,customers}
+//   ../channeltalk-integration-researcher/.claude/skills/channeltalk-manual-team/{references,schemas,workflow,SKILL.md}
+//     → 4개 역할 에이전트 md 가 참조하는 팀 스킬(dangling 해소). 참조 경로와 정확히 일치하는 위치로 동봉.
 //   ../../logs (repo 루트 logs) — 무편집 복사
 //
 // 산출(제출 루트 = out/):
 //   out/README.md · out/src/.codex-plugin/plugin.json
 //   out/src/skills/<name>/{SKILL.md,lib,ssot,schemas,test,scripts,agents,customers}
+//   out/src/skills/channeltalk-manual-team/{references,schemas,workflow,SKILL.md} — 팀 참조 실체(dangling 0)
 //   out/logs/<tool>/<session>.jsonl · out/submission.zip
 //
 // 조립 원칙: authored 골격(submission/)을 out/ 에 그대로 깔고, 그 위에 공유 코드를 얹는다.
@@ -47,11 +50,16 @@ const MOCK = join(APPS_ROOT, "channeltalk-api-mock");
 const RESEARCHER = join(APPS_ROOT, "channeltalk-integration-researcher");
 
 const SKILL_NAME = "channeltalk-integration-researcher";
+// 매뉴얼 팀 스킬 — 4개 역할 에이전트 md 가 references/schemas 를 이 이름 아래로 참조(dangling 해소).
+const TEAM_SKILL_NAME = "channeltalk-manual-team";
+const TEAM_SRC = join(RESEARCHER, ".claude", "skills", TEAM_SKILL_NAME);
 
 const SKELETON = join(PLUGIN_ROOT, "submission"); // authored 골격(최종 레이아웃 미러)
 const OUT = join(PLUGIN_ROOT, "out");
 const SRC = join(OUT, "src");
 const SKILL_DIR = join(SRC, "skills", SKILL_NAME);
+// 팀 스킬 조립 위치 = skills/channeltalk-manual-team/ — 4개 에이전트 md 참조 경로와 정확히 일치.
+const TEAM_DIR = join(SRC, "skills", TEAM_SKILL_NAME);
 
 const created = [];
 function note(p) {
@@ -124,6 +132,12 @@ function main() {
   requirePath(join(RESEARCHER, "scripts", "record_depth.mjs"), "record_depth.mjs");
   requirePath(join(RESEARCHER, ".claude", "agents"), "researcher agents/");
   requirePath(join(RESEARCHER, "customers"), "researcher customers/");
+  // 팀 스킬 참조 파일 — 4개 에이전트 md 가 skills/channeltalk-manual-team/ 아래로 참조하는 실체.
+  requirePath(join(TEAM_SRC, "references", "channeltalk-manual-philosophy.md"), "team references/philosophy");
+  requirePath(join(TEAM_SRC, "schemas", "accuracy-verdict.schema.json"), "team schemas/accuracy");
+  requirePath(join(TEAM_SRC, "schemas", "completeness-verdict.schema.json"), "team schemas/completeness");
+  requirePath(join(TEAM_SRC, "schemas", "privacy-verdict.schema.json"), "team schemas/privacy");
+  requirePath(join(TEAM_SRC, "workflow", "channeltalk-manual-loop.mjs"), "team workflow/manual-loop");
 
   // 깨끗한 staging.
   if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
@@ -161,6 +175,22 @@ function main() {
     isDir ? true : name.endsWith(".json"),
   );
 
+  // 5b) 매뉴얼 팀 스킬 동봉(dangling 해소) — skills/channeltalk-manual-team/ 아래에
+  //     references/philosophy · schemas/{accuracy,completeness,privacy}-verdict + workflow/manual-loop 를 실재화.
+  //     4개 역할 에이전트 md 가 이 정확한 경로를 참조하므로 위치 그대로 복사(경로 재작성 불필요).
+  copyDir(join(TEAM_SRC, "references"), join(TEAM_DIR, "references"));
+  copyDir(join(TEAM_SRC, "schemas"), join(TEAM_DIR, "schemas"));
+  // workflow/channeltalk-manual-loop.mjs 는 형제앱 lib import 가 없다(런타임 async-wrap·fs 금지 규약).
+  //   있었다면 다른 .mjs 와 동일 규칙으로 재작성하되, 없으므로 그대로 복사.
+  const teamWfRw = copyMjsRewritten(
+    join(TEAM_SRC, "workflow", "channeltalk-manual-loop.mjs"),
+    join(TEAM_DIR, "workflow", "channeltalk-manual-loop.mjs"),
+  );
+  // 팀 스킬 진입점(SKILL.md)도 동봉해 스킬을 자족형으로 — 있으면 복사.
+  if (existsSync(join(TEAM_SRC, "SKILL.md"))) {
+    copyFile(join(TEAM_SRC, "SKILL.md"), join(TEAM_DIR, "SKILL.md"));
+  }
+
   // 6) logs(무편집 복사, repo 루트 logs/).
   const logsSrc = join(REPO_ROOT, "logs");
   let logsCopied = 0;
@@ -197,7 +227,12 @@ function main() {
         skeleton: relative(PLUGIN_ROOT, SKELETON),
         staging: relative(PLUGIN_ROOT, SRC),
         skill_dir: relative(PLUGIN_ROOT, SKILL_DIR),
-        rewrites: { "verify_manual.mjs": rw1.rewritten, "record_depth.mjs": rw2.rewritten },
+        rewrites: {
+          "verify_manual.mjs": rw1.rewritten,
+          "record_depth.mjs": rw2.rewritten,
+          "channeltalk-manual-loop.mjs": teamWfRw.rewritten,
+        },
+        team_skill: relative(PLUGIN_ROOT, TEAM_DIR),
         logs_files: logsCopied,
         zip: zipStatus,
         files: created.length,
