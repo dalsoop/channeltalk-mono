@@ -31,11 +31,20 @@ description: AX 해커톤 제출물 channeltalk-plugin 을 5인 전문가 패널
 
 ## Commands
 
+같은 패널(역할·프롬프트·스키마 동일)을 **두 런타임**으로 돌릴 수 있다. 계약 동일: `{ verdicts:[≤5], synthesis }`.
+
 ```bash
-# 결정적 오케스트레이션(캐논). Workflow 로 실행하거나, Agent 로 5인+종합을 직접 spawn.
+# (A) Claude 런타임 — 결정적 오케스트레이션(캐논). Workflow 로 실행하거나 Agent 로 5인+종합 직접 spawn.
 Workflow({ scriptPath: ".claude/skills/channeltalk-plugin-judge/workflow/judge-panel.mjs" })
 # → { verdicts:[5], synthesis } . 디스크 쓰기·리포트 렌더는 호출자.
+
+# (B) Codex CLI 런타임 — 순수 node CLI 가 `codex exec` 5개 병렬 + 종합을 돈다(codex login 전제).
+node .claude/skills/channeltalk-plugin-judge/workflow/codex-panel.mjs
+node .claude/skills/channeltalk-plugin-judge/workflow/codex-panel.mjs --only redteam-skeptic --no-synth  # 1인 스모크
+# → out/codex-<stamp>/{judge-*.json, synthesis.json, report.json} (gitignore). report.json.loop_healthy 로 판정.
 ```
+
+두 런타임 모두 `-s read-only`(채점만·쓰기 없음). Codex 판은 정본 스키마에서 OpenAI strict 사본을 파생(정본 불변).
 
 ## Boundaries
 
