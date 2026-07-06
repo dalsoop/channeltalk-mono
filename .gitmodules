@@ -1,0 +1,15 @@
+[submodule "apps/agent-factory"]
+	path = apps/agent-factory
+	url = https://github.com/dalsoop/agent-factory.git
+[submodule "apps/channeltalk-api-mock"]
+	path = apps/channeltalk-api-mock
+	url = https://github.com/dalsoop/channeltalk-api-mock.git
+[submodule "apps/channeltalk-integration-researcher"]
+	path = apps/channeltalk-integration-researcher
+	url = https://github.com/dalsoop/channeltalk-integration-researcher.git
+[submodule "apps/channeltalk-plugin"]
+	path = apps/channeltalk-plugin
+	url = https://github.com/dalsoop/channeltalk-plugin.git
+[submodule "apps/channeltalk-plugin-judge"]
+	path = apps/channeltalk-plugin-judge
+	url = https://github.com/dalsoop/channeltalk-plugin-judge.git
