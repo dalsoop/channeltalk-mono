@@ -1,0 +1,309 @@
+{
+  "customer": "www.example.com",
+  "surface_version": 5,
+  "baseline_version": 1,
+  "profile": {
+    "integration_stage": "none",
+    "pii_policy": "no-transmit",
+    "depth": 1
+  },
+  "new_features": [
+    {
+      "id": "openapi.user.get",
+      "category": "User",
+      "method": "GET",
+      "path": "/open/v5/users/{userId}",
+      "dir": "R",
+      "has_pii": true,
+      "pii_fields": [
+        "name",
+        "email",
+        "mobileNumber",
+        "avatarUrl",
+        "profile"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": "mask_inbound"
+    },
+    {
+      "id": "openapi.user.upsert",
+      "category": "User",
+      "method": "PATCH",
+      "path": "/open/v5/users/{userId}",
+      "dir": "W",
+      "has_pii": true,
+      "pii_fields": [
+        "name",
+        "email",
+        "mobileNumber",
+        "profile"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": "hold_pii_transmit"
+    },
+    {
+      "id": "openapi.user.delete",
+      "category": "User",
+      "method": "DELETE",
+      "path": "/open/v5/users/{userId}",
+      "dir": "W",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.user.event.create",
+      "category": "Event",
+      "method": "POST",
+      "path": "/open/v5/users/{userId}/events",
+      "dir": "W",
+      "has_pii": true,
+      "pii_fields": [
+        "property"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 3,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.userchat.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.userchat.get",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.user.userchats.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/users/{userId}/user-chats",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.user.userchats.create",
+      "category": "UserChat",
+      "method": "POST",
+      "path": "/open/v5/users/{userId}/user-chats",
+      "dir": "W",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.userchat.sessions.list",
+      "category": "UserChat",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}/sessions",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.message.list",
+      "category": "Message",
+      "method": "GET",
+      "path": "/open/v5/user-chats/{userChatId}/messages",
+      "dir": "R",
+      "has_pii": true,
+      "pii_fields": [
+        "plainText",
+        "files"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": "mask_inbound"
+    },
+    {
+      "id": "openapi.message.send",
+      "category": "Message",
+      "method": "POST",
+      "path": "/open/v5/user-chats/{userChatId}/messages",
+      "dir": "W",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.group.message.send",
+      "category": "Message",
+      "method": "POST",
+      "path": "/open/v5/groups/{groupId}/messages",
+      "dir": "W",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.manager.list",
+      "category": "Manager",
+      "method": "GET",
+      "path": "/open/v5/managers",
+      "dir": "R",
+      "has_pii": true,
+      "pii_fields": [
+        "name",
+        "email"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 1,
+      "policy_flag": "mask_inbound"
+    },
+    {
+      "id": "openapi.manager.get",
+      "category": "Manager",
+      "method": "GET",
+      "path": "/open/v5/managers/{managerId}",
+      "dir": "R",
+      "has_pii": true,
+      "pii_fields": [
+        "name",
+        "email"
+      ],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": "mask_inbound"
+    },
+    {
+      "id": "openapi.group.list",
+      "category": "Group",
+      "method": "GET",
+      "path": "/open/v5/groups",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.bot.create",
+      "category": "Bot",
+      "method": "POST",
+      "path": "/open/v5/bots",
+      "dir": "W",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 3,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.bot.list",
+      "category": "Bot",
+      "method": "GET",
+      "path": "/open/v5/bots",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 3,
+      "policy_flag": null
+    },
+    {
+      "id": "openapi.channel.get",
+      "category": "Channel",
+      "method": "GET",
+      "path": "/open/v5/channel",
+      "dir": "R",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "pinned",
+      "added_in_version": 2,
+      "policy_flag": null
+    },
+    {
+      "id": "webhook.message.created",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "dir": "CB",
+      "has_pii": true,
+      "pii_fields": [
+        "entity.plainText"
+      ],
+      "provenance": "inferred",
+      "added_in_version": 3,
+      "policy_flag": "mask_inbound"
+    },
+    {
+      "id": "webhook.userchat.opened",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "dir": "CB",
+      "has_pii": false,
+      "pii_fields": [],
+      "provenance": "inferred",
+      "added_in_version": 3,
+      "policy_flag": null
+    },
+    {
+      "id": "webhook.user.created",
+      "category": "Webhook",
+      "method": "POST",
+      "path": "(구독자 콜백 URL)",
+      "dir": "CB",
+      "has_pii": true,
+      "pii_fields": [
+        "entity.name",
+        "entity.email",
+        "entity.mobileNumber"
+      ],
+      "provenance": "inferred",
+      "added_in_version": 4,
+      "policy_flag": "mask_inbound"
+    }
+  ],
+  "removed": [],
+  "counts": {
+    "surface": 21,
+    "integrated": 0,
+    "new": 21,
+    "new_with_pii": 8,
+    "policy_hold": 1,
+    "new_inferred": 3
+  },
+  "gates": {
+    "diff_completeness": true,
+    "no_fabricated_endpoint": true,
+    "no_secret_in_example": true,
+    "every_pii_flagged": true,
+    "surface_in_pinned_spec": true
+  },
+  "gate_offenders": {}
+}

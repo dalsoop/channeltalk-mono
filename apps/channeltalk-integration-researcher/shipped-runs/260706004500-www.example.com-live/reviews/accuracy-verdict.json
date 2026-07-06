@@ -1,0 +1,15 @@
+{
+  "count": 0,
+  "verdict": "pass",
+  "offenders": [],
+  "checked": [
+    "21개 매뉴얼 엔드포인트의 method+path 를 surface.snapshot.json features[].method/path 화이트리스트와 1:1 대조 — 18 REST + 3 webhook 전부 실재(users.get/upsert/delete, user.event.create, userchat list/get/user-chats.list/create/sessions.list, message list/send, group.message.send, manager list/get, group.list, bot create/list, channel.get, webhook message.created/userchat.opened/user.created). /open/v5/... 형태인데 표면에 없는 지어낸 경로 없음.",
+    "각 기능의 params 를 surface features[].params 와 대조 — userchat.list(state,sortOrder,limit), message.list(userChatId,limit,since), manager.list/group.list/bot.list(limit) 등 전부 표면 계약과 일치. 표면에 없는 param 추가 없음.",
+    "매뉴얼의 응답 예시 JSON 을 surface features[].example_response 와 대조 — user.get(name,email,mobileNumber,profile), message.list(plainText,files), manager(name,email), webhook entity 필드 등 전부 표면 example_response 를 그대로 인용. 표면에 없는 응답 필드 주장 없음.",
+    "pii_fields 를 surface features[].pii_fields + changes.json new_features[].pii_fields 와 대조 — user.get(name,email,mobileNumber,avatarUrl,profile), user.upsert(name,email,mobileNumber,profile), message.list(plainText,files), manager(name,email), webhook.message.created(entity.plainText), webhook.user.created(entity.name/email/mobileNumber) 전부 SSOT 와 일치.",
+    "auth 헤더 대조 — REST 18개는 x-access-key+x-access-secret, webhook 3개는 x-signature (HMAC). surface features[].auth 와 정확히 일치. 표면에 없는 auth 헤더 없음.",
+    "provenance 정직성 — 매뉴얼이 pinned 을 '공개 스펙 스냅샷 해시 고정 일치, 라이브 호출 확인 아님'으로 명시(line 7,14)하고 verified-live 로 단정하지 않음. webhook 3종은 inferred 로 표기하고 '⚠️ 문서 검증 필요' 경고를 달아 확정 서술하지 않음 — surface provenance(pinned/inferred) 와 일치.",
+    "policy_flag 대조 — 요약표의 mask_inbound(user.get,message.list,manager list/get,webhook message.created/user.created), hold_pii_transmit(user.upsert) 가 changes.json new_features[].policy_flag 와 일치. hold_pii_transmit 도입 보류 권고도 pii_policy=no-transmit 프로필과 정합."
+  ],
+  "fixes": []
+}

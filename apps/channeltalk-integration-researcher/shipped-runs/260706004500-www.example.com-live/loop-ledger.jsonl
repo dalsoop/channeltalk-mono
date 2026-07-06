@@ -1,0 +1,1 @@
+{"round":1,"phase":"Draft→Gate","maker":{"chars":15552,"covered_ids":21,"new_ids":21},"deterministic_gate":{"tool":"verify_manual.mjs","verdict":"approve","missed":0},"semantic_checkers":{"accuracy":{"count":0,"verdict":"pass"},"completeness":{"count":0,"verdict":"pass"},"privacy":{"count":0,"verdict":"pass"}},"counts":{"accurate":0,"complete":0,"privacy":0},"clean":true}
