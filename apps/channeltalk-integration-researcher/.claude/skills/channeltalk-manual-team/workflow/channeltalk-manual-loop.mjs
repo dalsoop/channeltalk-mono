@@ -131,7 +131,7 @@ const makePrompt = (changes, surface, ids) =>
 [changes.json] ${JSON.stringify(changes)}
 [surface.snapshot.json] ${JSON.stringify(surface)}
 각 기능 섹션 규칙(CHANNELTALK.md 5.2):
-- provenance 배지: mock | inferred (inferred 는 "문서 검증 필요" 문구 필수).
+- provenance 배지: pinned | inferred (inferred 는 "문서 검증 필요" 문구 필수). pinned=pin된 실 스펙 스냅샷 일치(≠ verified-live).
 - 무엇/왜: summary + value 그대로.
 - 어떻게: method + path, auth 헤더, params, 예제(플레이스홀더 <KEY>/<SECRET>/<PII:*> 그대로 — 실키·실 개인정보 넣지 마라).
 - 개인정보 주의: pii_fields 또는 policy_flag 있으면 필수. 방향(R/W/CB)별로 6 규칙(GET=마스킹·최소요청 / PUT·POST=전송동의·위탁 / webhook=서명검증·본문마스킹). policy_flag=hold_pii_transmit 이면 "도입 보류 권고", mask_inbound 이면 "수신 마스킹".
