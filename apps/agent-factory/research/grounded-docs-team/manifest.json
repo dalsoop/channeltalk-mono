@@ -1,0 +1,20 @@
+{
+  "agent_score": 8.71,
+  "generated_checkers": 3,
+  "completion_note": "최초 factory 생성은 checker 3(근거·쉬움·구조/글자수)에서 멈췄다(agent_score 8.71 — factory 자체 9/10 게이트 미달). 4번째 checker(docs-tone-reviewer, 말투 S1==0 + tone>=8.0)와 workflow/SKILL/spec 배선은 생성 후 수동 완성했다. 아래 files 는 완성된 팀 실물(13파일). agent_score 는 최초 3-checker 생성 시점 값이며 수동 완성으로 재채점하지 않았다(정직).",
+  "files": [
+    "agents/grounded-docs-writer.md",
+    "agents/docs-grounding-reviewer.md",
+    "agents/docs-plainness-reviewer.md",
+    "agents/docs-structure-count-reviewer.md",
+    "agents/docs-tone-reviewer.md",
+    "skills/grounded-docs-team/SKILL.md",
+    "skills/grounded-docs-team/schemas/grounding-verdict.schema.json",
+    "skills/grounded-docs-team/schemas/plainness-verdict.schema.json",
+    "skills/grounded-docs-team/schemas/structure-count-verdict.schema.json",
+    "skills/grounded-docs-team/schemas/tone-verdict.schema.json",
+    "skills/grounded-docs-team/references/grounded-docs-philosophy.md",
+    "skills/grounded-docs-team/workflow/grounded-docs-loop.mjs",
+    "skills/grounded-docs-team/examples/grounded-docs.run.example.yaml"
+  ]
+}
