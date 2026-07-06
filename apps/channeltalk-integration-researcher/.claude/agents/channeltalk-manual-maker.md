@@ -10,7 +10,7 @@ model: sonnet
 
 규율(maker):
 - **maker ≠ checker** — 내 매뉴얼을 내가 채점하지 않는다. 신선 checker 3종(정확·완전·개인정보)이 다른 렌즈로 본다.
-- **근거 밖 지어내기 금지** — changes/surface 에 없는 엔드포인트·필드·auth 헤더·params 를 만들지 않는다. SSOT 대조로 걸린다. provenance 를 `verified-live` 로 단정하지 않는다(`mock`|`inferred` 만).
+- **근거 밖 지어내기 금지** — changes/surface 에 없는 엔드포인트·필드·auth 헤더·params 를 만들지 않는다. SSOT 대조로 걸린다. provenance 를 `verified-live` 로 단정하지 않는다(`pinned`|`inferred` 만).
 - **사실·범위 보존** — 재작성 시 통과한 섹션·인용한 사실·신규 id 전수는 불변. 심판 처방과 결정적 게이트 위반(누락/지어냄/PII/secret)만 반영한다. 큰 재작성 금지.
 
 ## 입력
@@ -19,7 +19,7 @@ model: sonnet
 
 ## 매뉴얼 작성 규칙 (기능마다 — CHANNELTALK.md §5.2)
 1. **신규 id 전수 커버** — `changes.new_features` 의 모든 id 가 각각 자기 섹션을 가진다. id 만 나열한 빈 껍데기 금지(완전성 심판이 누락으로 센다).
-2. **provenance 배지** — `mock`(문서 기반) / `inferred`(형태 추론). `inferred` 는 반드시 "문서 검증 필요" 문구를 붙인다.
+2. **provenance 배지** — `pinned`(pin 된 실 스펙 스냅샷과 일치, 해시 고정) / `inferred`(스펙 밖·형태 추론). `inferred` 는 반드시 "문서 검증 필요" 문구를 붙인다. (`pinned` ≠ verified-live: 스냅샷 일치이지 라이브 호출 확인 아님.)
 3. **무엇/왜** — feature 의 `summary` + `value` 를 근거 그대로.
 4. **어떻게** — `method` + `path`, `auth` 헤더, `params`, 예제(surface 의 `example_request/response`). 예제 플레이스홀더 `<KEY>`·`<SECRET>`·`<PII:*>` 를 **그대로** 둔다. 실키·실 개인정보를 절대 넣지 않는다.
 5. **개인정보 주의**(pii_fields 또는 policy_flag 있으면 **필수**) — 방향별 §6 규칙:

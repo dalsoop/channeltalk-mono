@@ -1,6 +1,7 @@
-# channeltalk-manual-team — 실행 바인딩 예시
+# channeltalk-manual-team — 실행 바인딩 예시 (4개 feature 발췌 — 실제 표면은 21건)
 # 오케스트레이터(SKILL)가 out/<run>/changes.json + surface.snapshot.json 을 JSON.parse 해
 # args.changes / args.surface 로 워크플로에 주입한다. 값은 파일에서 읽는다(하드코딩 금지).
+# provenance 는 pinned(pin 된 실 스펙 스냅샷 일치) | inferred(스펙 밖·webhook) 만 — mock 아님.
 
 workflow: skills/channeltalk-manual-team/workflow/channeltalk-manual-loop.mjs
 
@@ -11,24 +12,24 @@ args:
   # out/<run>/changes.json 파싱본 (결정적 diff — CHANNELTALK.md §4.4)
   changes:
     customer: "www.example.com"
-    surface_version: 4
+    surface_version: 5
     baseline_version: 1
     profile: { integration_stage: "none", pii_policy: "no-transmit", depth: 0 }
     new_features:
       - id: "openapi.user.upsert"
         category: "User"
-        method: "PUT"
+        method: "PATCH"                       # 실 스펙 교정: PUT→PATCH (refresh_surface CORRECTIONS)
         has_pii: true
         pii_fields: ["name", "email", "mobileNumber", "profile"]
-        provenance: "mock"
-        added_in_version: 2
+        provenance: "pinned"
+        added_in_version: 1
         policy_flag: "hold_pii_transmit"      # no-transmit + W+PII → 도입 보류 권고
       - id: "openapi.message.list"
         category: "Message"
         method: "GET"
         has_pii: true
         pii_fields: ["plainText", "files"]
-        provenance: "mock"
+        provenance: "pinned"
         added_in_version: 1
         policy_flag: "mask_inbound"           # R+PII → 수신 마스킹
       - id: "webhook.user.created"
@@ -36,42 +37,43 @@ args:
         method: "POST"
         has_pii: true
         pii_fields: ["entity.name", "entity.email", "entity.mobileNumber"]
-        provenance: "inferred"                 # 형태 추론 → "문서 검증 필요"
-        added_in_version: 4
+        provenance: "inferred"                 # 스펙 밖(webhook) → "문서 검증 필요"
+        added_in_version: 1
         policy_flag: "mask_inbound"
       - id: "openapi.bot.list"
         category: "Bot"
         method: "GET"
         has_pii: false
         pii_fields: []
-        provenance: "mock"
-        added_in_version: 3
+        provenance: "pinned"
+        added_in_version: 1
     removed: []
-    counts: { surface: 22, integrated: 0, new: 4, new_with_pii: 3, policy_hold: 1, new_inferred: 1 }
+    counts: { surface: 21, integrated: 0, new: 4, new_with_pii: 3, policy_hold: 1, new_inferred: 1 }
     gates:
       diff_completeness: true
       no_fabricated_endpoint: true
       no_secret_in_example: true
       every_pii_flagged: true
+      surface_in_pinned_spec: true          # 5번째 게이트: pinned feature 가 pin 된 실 스펙에 실재
 
   # out/<run>/surface.snapshot.json 파싱본 (이 매뉴얼이 대조한 표면 — CHANNELTALK.md §4.1·§12)
   surface:
-    source: "https://api-doc.channel.io/"
+    source: "https://api.channel.io/docs/open/swagger.json"   # 공개 OpenAPI, sha256 로 pin
     base_url: "https://api.channel.io/open/v5"
-    surface_version: 4
+    surface_version: 5
     features:
       - id: "openapi.user.upsert"
         category: "User"
-        method: "PUT"
+        method: "PATCH"
         path: "/open/v5/users/{userId}"
         auth: ["x-access-key", "x-access-secret"]
         summary: "단일 유저(고객) 생성/갱신"
         params: [{ name: "userId", in: "path", required: true }]
         pii_fields: ["name", "email", "mobileNumber", "profile"]
-        example_request: "PUT /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"profile\":{\"name\":\"<PII:name>\",\"email\":\"<PII:email>\"}}"
+        example_request: "PATCH /open/v5/users/{userId}\nx-access-key: <KEY>\nx-access-secret: <SECRET>\n{\"profile\":{\"name\":\"<PII:name>\",\"email\":\"<PII:email>\"}}"
         value: "회원정보를 상담원이 보게 동기화(단, 개인정보 외부 전송 — 동의·위탁 검토)"
-        provenance: "mock"
-        added_in_version: 2
+        provenance: "pinned"
+        added_in_version: 1
       - id: "openapi.message.list"
         category: "Message"
         method: "GET"
@@ -83,7 +85,7 @@ args:
           - { name: "since", in: "query", required: false }
         pii_fields: ["plainText", "files"]
         value: "상담 본문을 내부로 가져와 처리(plainText 는 사용자 입력 → 마스킹)"
-        provenance: "mock"
+        provenance: "pinned"
         added_in_version: 1
       - id: "webhook.user.created"
         category: "Webhook"
@@ -96,7 +98,7 @@ args:
         example_response: { type: "user", entity: { id: "u_1", name: "<PII:name>", email: "<PII:email>" } }
         value: "신규 유저 생성 시 내부 동기화(수신 본문에 PII 유입 — 서명 검증·마스킹)"
         provenance: "inferred"
-        added_in_version: 4
+        added_in_version: 1
       - id: "openapi.bot.list"
         category: "Bot"
         method: "GET"
@@ -106,8 +108,8 @@ args:
         params: []
         pii_fields: []
         value: "운영 중 봇을 조회(개인정보 없음)"
-        provenance: "mock"
-        added_in_version: 3
+        provenance: "pinned"
+        added_in_version: 1
 
 # 기대 결과 (게이트 통과 시):
 #   accurate=0 (표면에 없는 엔드포인트/필드/헤더 지어냄 없음)
@@ -115,8 +117,9 @@ args:
 #   privacy_safe=0 (W=동의·위탁 / R=마스킹 / CB=서명검증·마스킹 주의 + hold_pii_transmit/mask_inbound 반영,
 #                   예제는 <KEY>/<SECRET>/<PII:*> 플레이스홀더만 → secret 누출 0)
 #
-# 호출 (SKILL 오케스트레이터):
-#   Workflow({ scriptPath: ".../workflow/channeltalk-manual-loop.mjs", args: <위 args> })
+# 호출 (SKILL 오케스트레이터 — run(deps) 형태):
+#   import { run } from ".../workflow/channeltalk-manual-loop.mjs"
+#   await run({ phase, agent, parallel, log, args: <위 args> })
 #   → best.manual.markdown 을 out/260705190000-example.com/update-manual.md 로 쓰고,
 #     결정적 verify 로 실측(--run 플래그 없음 — 파일 경로를 직접 준다):
 #       node apps/channeltalk-integration-researcher/scripts/verify_manual.mjs \

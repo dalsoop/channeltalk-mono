@@ -1,6 +1,6 @@
 {
   "name": "channeltalk-integration-researcher",
   "version": "1.0.0",
-  "description": "채널톡 Open API 표면 대비 고객사 baseline 의 신규 기능을 PII-안전 연동 매뉴얼로 뽑고 뎁스를 누적하는 maker→checker 리서처 (오프라인·결정적 mock).",
+  "description": "채널톡 Open API 표면 대비 고객사 baseline 의 신규 기능을 PII-안전 연동 매뉴얼로 뽑고 뎁스를 누적하는 maker→checker 리서처 (pin 된 실 스펙 스냅샷 기반, 오프라인·결정적).",
   "skills": "./skills/"
 }

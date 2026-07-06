@@ -22,7 +22,7 @@
 
 ## 매뉴얼 작성 규율 (maker — CHANNELTALK.md §5.2)
 - **근거 밖 지어내기 금지**: changes+surface 에 없는 엔드포인트·필드·auth 헤더·params 를 만들지 않는다.
-- **provenance 정직**: `mock`(문서 기반)·`inferred`(형태 추론)만. `inferred` 는 "문서 검증 필요". `verified-live` 단정 금지.
+- **provenance 정직**: `pinned`(pin 된 실 스펙 스냅샷 일치)·`inferred`(스펙 밖·형태 추론)만. `inferred` 는 "문서 검증 필요". `verified-live` 단정 금지(`pinned` ≠ 라이브 호출 확인).
 - **기능마다 섹션**: provenance 배지 · 무엇/왜(summary+value) · 어떻게(method+path+auth+params+예제 플레이스홀더) · 개인정보 주의.
 - **예제 플레이스홀더 그대로**: `<KEY>`·`<SECRET>`·`<PII:*>`. 실키·실 개인정보 금지.
 
@@ -42,7 +42,7 @@
 | M-2 | 신규 id 를 나열만 하고 알맹이 없는 껍데기 | completeness checker 가 누락으로 카운트, method+path+예제 채움 |
 | M-3 | pii/policy 기능인데 개인정보 주의 없음/방향 안 맞음 | privacy checker count +1, §6 방향별 주의 강제 |
 | M-4 | 예제에 실키/실 개인정보 | privacy checker secret 누출 +1, `<KEY>`/`<SECRET>`/`<PII:*>` 로 치환 |
-| M-5 | provenance 를 verified-live 로 단정 | accuracy checker 가 잡음, `mock`/`inferred` 로 정정 |
+| M-5 | provenance 를 verified-live 로 단정 | accuracy checker 가 잡음, `pinned`/`inferred` 로 정정 |
 | M-6 | maker 가 자기 매뉴얼 자기 채점 | 신선 checker 3 분리(F-2) |
 
 ## Goodhart 방어 (점수를 정직하게)

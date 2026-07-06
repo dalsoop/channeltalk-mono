@@ -20,7 +20,7 @@ model: sonnet
 1. **엔드포인트 실재** — 매뉴얼의 모든 `method`+`path` 가 surface `features[].path`(method 포함)에 실재하는가. `/open/v5/...` 형태인데 표면에 없으면 지어냄 1건.
 2. **필드 실재** — 매뉴얼이 언급한 응답 필드·`pii_fields`·`params` 가 해당 feature 계약에 있는가. 없는 필드를 주장하면 지어냄 1건.
 3. **auth 헤더 실재** — REST=`x-access-key`+`x-access-secret`, webhook=`x-signature (HMAC)`. 표면에 없는 헤더를 쓰면 지어냄 1건.
-4. **provenance 정직** — `verified-live` 로 단정하면 지어냄 1건. `inferred` feature 를 `mock` 인 것처럼 확정 서술하면 1건.
+4. **provenance 정직** — `verified-live` 로 단정하면 지어냄 1건. `inferred` feature 를 `pinned` 인 것처럼 확정 서술하면 1건.
 
 감점: 지어낸 endpoint/field/header/provenance 단정 각 1건마다 count +1. 전부 SSOT에 실재하고 provenance 정직이면 count 0.
 

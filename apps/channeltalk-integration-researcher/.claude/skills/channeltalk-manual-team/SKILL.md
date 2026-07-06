@@ -50,7 +50,7 @@ await run({ phase, agent, parallel, log,
 ## 운영 원칙
 - **검증 없는 출하 금지**: 의미 채점(3 checker)만으로 출하하지 않는다. 결정적 verify(`apps/channeltalk-integration-researcher/scripts/verify_manual.mjs` — `--changes`/`--manual`, exit `approve=0`·`revise=3`)와 스키마 파싱을 반드시 통과해야 출하한다.
 - **maker ≠ checker**: maker 는 자기 매뉴얼을 채점하지 않는다. 3 checker 는 신선(매 라운드 새 눈).
-- **근거·범위 정직**: changes+surface 밖 엔드포인트·필드·헤더를 지어내지 않는다. provenance 는 `mock`|`inferred` 만(verified-live 금지).
+- **근거·범위 정직**: changes+surface 밖 엔드포인트·필드·헤더를 지어내지 않는다. provenance 는 `pinned`|`inferred` 만(verified-live 금지).
 - **개인정보 보수**: pii/policy 있는 기능은 §6 방향별 주의 필수. 예제는 플레이스홀더만.
 - **무인 진행**: 루프 중 사람에게 묻지 않는다. 라운드·점수만 중계.
 

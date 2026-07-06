@@ -76,7 +76,7 @@ export function run({ record, surface }) {
       },
       gate_offenders: {},
       new_features: [
-        { id: "openapi.thing.get", provenance: "mock" },
+        { id: "openapi.thing.get", provenance: "pinned" },
         { id: "webhook.thing.created", provenance: "inferred" }, // → not_verified 로 파생
       ],
     };
